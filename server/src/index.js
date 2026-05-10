@@ -90,7 +90,7 @@ connectDB()
       console.error("Reminder scheduler init failed:", err.message || err);
     }
     
-    initSocket(server, process.env.CLIENT_ORIGIN);
+    initSocket(server, allowedOrigins.length === 1 && allowedOrigins[0] === "*" ? "*" : allowedOrigins);
 
     server.listen(PORT, () => {
       console.log(`SmartSwaasth server running on http://localhost:${PORT}`);
