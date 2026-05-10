@@ -48,7 +48,11 @@ app.use("/api/auth/login", authLimiter);
 app.use("/api/auth/register", authLimiter);
 
 // CORS
-const allowedOrigins = (process.env.CLIENT_ORIGIN || "*").split(",").map(s => s.trim());
+const allowedOrigins = (process.env.CLIENT_ORIGIN || "*")
+  .split(/[\s,]+/) // Split by comma OR space
+  .map(s => s.trim().replace(/[^\x20-\x7E]/g, "")) // Remove invisible/control characters
+  .filter(Boolean);
+
 app.use(cors({
   origin: allowedOrigins.length === 1 && allowedOrigins[0] === "*"
     ? "*"
