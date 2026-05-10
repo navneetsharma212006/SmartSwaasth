@@ -6,9 +6,9 @@ const webpush = require("web-push");
 const PushSubscription = require("../models/PushSubscription");
 
 // Configure VAPID
-const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
-const VAPID_EMAIL = process.env.VAPID_EMAIL || "mailto:admin@smartswaasth.app";
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY?.trim();
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY?.trim();
+const VAPID_EMAIL = process.env.VAPID_EMAIL?.trim() || "mailto:admin@smartswaasth.app";
 
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
