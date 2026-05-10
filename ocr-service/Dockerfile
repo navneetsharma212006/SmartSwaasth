@@ -2,17 +2,14 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies needed by OpenCV
+# Install system dependencies needed by OpenCV and Tesseract
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends libgl1 libglib2.0-0 && \
+    apt-get install -y --no-install-recommends libgl1 libglib2.0-0 tesseract-ocr && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Pre-download EasyOCR models during build (so first request isn't slow)
-RUN python -c "import easyocr; easyocr.Reader(['en'], gpu=False)"
 
 # Copy application source
 COPY . .

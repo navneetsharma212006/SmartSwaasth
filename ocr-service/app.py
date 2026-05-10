@@ -10,8 +10,8 @@ from datetime import datetime
 from typing import List, Optional, Tuple
 
 import cv2
-import easyocr
 import numpy as np
+import pytesseract
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
@@ -24,9 +24,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Load model once (English). Set gpu=True if you have CUDA.
-reader = easyocr.Reader(["en"], gpu=False)
 
 # ---------------- Image preprocessing ----------------
 
@@ -127,8 +124,8 @@ def looks_like_name(line: str) -> bool:
 
 def detect_medicine_name(results: List[Tuple[List, str, float]]) -> Optional[str]:
     """
-    EasyOCR returns [(bbox, text, confidence), ...].
     Score lines by: confidence + size of bounding box + uppercase ratio.
+    Expects results as [(bbox, text, conf)] where bbox = [[x0,y0], [x1,y1], [x2,y2], [x3,y3]]
     """
     scored = []
     for bbox, text, conf in results:
@@ -139,7 +136,9 @@ def detect_medicine_name(results: List[Tuple[List, str, float]]) -> Optional[str
         width = abs(x2 - x0)
         area = height * width
         upper_ratio = sum(1 for c in text if c.isupper()) / max(1, len(text))
-        score = conf * 0.4 + (area / 10000) * 0.4 + upper_ratio * 0.2
+        
+        # Scale score down slightly compared to EasyOCR to match Tesseract's confidence scale
+        score = (conf / 100) * 0.4 + (area / 10000) * 0.4 + upper_ratio * 0.2
         scored.append((score, text.strip()))
 
     if not scored:
@@ -166,10 +165,57 @@ async def ocr(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(400, f"Invalid image: {e}")
 
-    results = reader.readtext(pre)
-    lines = [t for _, t, _ in results]
-    raw_text = "\n".join(lines)
+    # Extract detailed data with Tesseract
+    data = pytesseract.image_to_data(pre, output_type=pytesseract.Output.DICT)
+    
+    # We want to group words into lines to match the old EasyOCR output style
+    lines = []
+    results = [] # [(bbox, text, conf)]
+    
+    current_line_text = []
+    current_line_conf = []
+    current_line_bbox = None
+    
+    n_boxes = len(data['text'])
+    for i in range(n_boxes):
+        if int(data['conf'][i]) > -1:
+            text = data['text'][i].strip()
+            if text:
+                x, y, w, h = data['left'][i], data['top'][i], data['width'][i], data['height'][i]
+                
+                # Check if this is a new line or same line (based on line_num)
+                if len(current_line_text) == 0:
+                    current_line_bbox = [x, y, x + w, y + h] # min_x, min_y, max_x, max_y
+                else:
+                    # Expand bounding box
+                    current_line_bbox[0] = min(current_line_bbox[0], x)
+                    current_line_bbox[1] = min(current_line_bbox[1], y)
+                    current_line_bbox[2] = max(current_line_bbox[2], x + w)
+                    current_line_bbox[3] = max(current_line_bbox[3], y + h)
+                
+                current_line_text.append(text)
+                current_line_conf.append(int(data['conf'][i]))
+        
+        # If the word is empty and we have a line, or if we hit the end, commit the line
+        is_end_of_line = i < n_boxes - 1 and data['word_num'][i+1] == 1
+        is_last_item = i == n_boxes - 1
+        
+        if (is_end_of_line or is_last_item) and len(current_line_text) > 0:
+            full_text = " ".join(current_line_text)
+            avg_conf = sum(current_line_conf) / len(current_line_conf)
+            lines.append(full_text)
+            
+            # Format bbox to match the expected [[x0,y0], [x1,y1], [x2,y2], [x3,y3]]
+            min_x, min_y, max_x, max_y = current_line_bbox
+            bbox = [[min_x, min_y], [max_x, min_y], [max_x, max_y], [min_x, max_y]]
+            
+            results.append((bbox, full_text, avg_conf))
+            
+            current_line_text = []
+            current_line_conf = []
+            current_line_bbox = None
 
+    raw_text = "\n".join(lines)
     expiry = parse_expiry(raw_text)
     name = detect_medicine_name(results)
 
