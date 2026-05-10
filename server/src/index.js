@@ -48,10 +48,13 @@ app.use("/api/auth/login", authLimiter);
 app.use("/api/auth/register", authLimiter);
 
 // CORS
-const allowedOrigins = (process.env.CLIENT_ORIGIN || "*")
+const envOrigins = (process.env.CLIENT_ORIGIN || "*")
   .split(/[\s,]+/) // Split by comma OR space
-  .map(s => s.trim().replace(/[^\x20-\x7E]/g, "")) // Remove invisible/control characters
+  .map(s => s.trim().replace(/[^\x20-\x7E]/g, "").replace(/\/+$/, "")) // Remove control chars & trailing slashes
   .filter(Boolean);
+
+// Hardcode the Vercel URLs just in case the user's Render variable has a typo
+const allowedOrigins = [...new Set([...envOrigins, "https://smart-swaasth.vercel.app", "https://smartswaasth.vercel.app"])];
 
 app.use(cors({
   origin: allowedOrigins.length === 1 && allowedOrigins[0] === "*"
