@@ -1,0 +1,45 @@
+# --- Secrets (never commit real credentials) ---
+# Note: `.env` matches that filename in any directory; `.env.example` is not matched.
+.env
+.env.local
+.env.production
+.env.development
+.env.test
+
+# --- Dependencies ---
+node_modules/
+
+# --- Python (OCR service) ---
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.egg-info/
+.eggs/
+
+# --- Build outputs ---
+client/dist/
+*.tsbuildinfo
+
+# --- Server: user uploads ---
+server/uploads/*
+!server/uploads/.gitkeep
+
+# --- Logs ---
+*.log
+npm-debug.log*
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# --- Keys (never commit) ---
+*.pem
+*.p12
+id_rsa
+id_ed25519
+*.key

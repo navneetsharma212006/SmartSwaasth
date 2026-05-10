@@ -1,0 +1,37 @@
+services:
+  # Express + Mongoose backend
+  - type: web
+    name: smartswaasth-server
+    runtime: docker
+    plan: free
+    dockerfilePath: ./server/Dockerfile
+    dockerContext: ./server
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "5000"
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: OCR_SERVICE_URL
+        sync: false
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_EMAIL
+        sync: false
+    healthCheckPath: /api/health
+
+  # FastAPI + EasyOCR microservice
+  - type: web
+    name: smartswaasth-ocr
+    runtime: docker
+    plan: free
+    dockerfilePath: ./ocr-service/Dockerfile
+    dockerContext: ./ocr-service
+    healthCheckPath: /health
