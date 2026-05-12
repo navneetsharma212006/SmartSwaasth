@@ -385,14 +385,9 @@ export default function Navbar() {
 
       {/* Mobile Menu Sidebar */}
       <div 
-        className={`fixed top-0 right-0 bg-white shadow-xl transition-transform duration-300 ease-in-out md:hidden`}
+        className={`fixed top-0 right-0 h-full w-[80vw] max-w-sm bg-white shadow-2xl transition-transform duration-300 ease-in-out md:hidden z-50`}
         style={{ 
-          width: '25vw',
-          minWidth: '200px',
-          maxWidth: '320px',
-          height: '100%',
-          transform: isMobileMenuOpen ? 'translateX(0)' : 'translateX(100%)',
-          zIndex: 50
+          transform: isMobileMenuOpen ? 'translateX(0)' : 'translateX(100%)'
         }}
       >
         <div className="flex flex-col h-full">
@@ -472,14 +467,16 @@ export default function Navbar() {
 
 
 
-            <button
-              type="button"
-              className={`${mobileLinkBase} flex w-full items-center justify-between gap-3 text-left text-black/70 hover:bg-black/5 hover:text-black`}
-              onClick={() => {
-                setShowMobileNotifSheet(true);
-                loadNotifications();
-                closeMobileMenu();
-              }}
+            <NavLink
+              to="/notifications"
+              className={({ isActive }) => 
+                `${mobileLinkBase} flex items-center justify-between gap-3 ${
+                  isActive 
+                    ? 'bg-black text-white' 
+                    : 'text-black/70 hover:bg-black/5 hover:text-black'
+                }`
+              }
+              onClick={closeMobileMenu}
             >
               <span className="flex items-center gap-3">
                 <FiBell className="text-lg" /> Notifications
@@ -489,7 +486,7 @@ export default function Navbar() {
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
-            </button>
+            </NavLink>
 
             {/* Mobile Resources Section */}
             <div>
