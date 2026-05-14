@@ -15,7 +15,7 @@ export function remindersBothOn(medicine) {
   );
 }
 
-export default function ScheduleManager({ medicine, onSave, onReminderToggle }) {
+export default function ScheduleManager({ medicine, onSave, onReminderToggle, readOnly }) {
   const [schedule, setSchedule] = useState({
     enabled: false,
     times: [],
@@ -112,7 +112,7 @@ export default function ScheduleManager({ medicine, onSave, onReminderToggle }) 
     setSchedule({ ...schedule, enabled });
   };
 
-  const checkboxDisabled = onReminderToggle ? toggling : !editing;
+  const checkboxDisabled = readOnly || (onReminderToggle ? toggling : !editing);
   const showTimesBlock =
     remindersBothOn(medicine) && schedule.times.length > 0;
 
@@ -123,34 +123,36 @@ export default function ScheduleManager({ medicine, onSave, onReminderToggle }) 
           <FiBell className="text-black/60" />
           <h4 className="font-medium">Medication Schedule</h4>
         </div>
-        {!editing ? (
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="p-1 hover:bg-black/5 rounded"
-          >
-            <FiEdit2 />
-          </button>
-        ) : (
-          <div className="flex gap-1">
+        {!readOnly && (
+          !editing ? (
             <button
               type="button"
-              onClick={saveSchedule}
-              className="p-1 hover:bg-black/5 rounded text-green-600"
-            >
-              <FiSave />
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEditing(false);
-                syncFromMedicine();
-              }}
+              onClick={() => setEditing(true)}
               className="p-1 hover:bg-black/5 rounded"
             >
-              <FiX />
+              <FiEdit2 />
             </button>
-          </div>
+          ) : (
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={saveSchedule}
+                className="p-1 hover:bg-black/5 rounded text-green-600"
+              >
+                <FiSave />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditing(false);
+                  syncFromMedicine();
+                }}
+                className="p-1 hover:bg-black/5 rounded"
+              >
+                <FiX />
+              </button>
+            </div>
+          )
         )}
       </div>
 

@@ -179,14 +179,16 @@ export default function Navbar() {
           
           {user && (
             <>
-              <NavLink 
-                to="/scan" 
-                className={({ isActive }) => 
-                  `${linkBase} ${isActive ? 'bg-black text-white' : 'text-black/70 hover:bg-black/5 hover:text-black'}`
-                }
-              >
-                <FiUpload className="inline mr-1" /> Scan
-              </NavLink>
+              {user.role === "caregiver" && (
+                <NavLink 
+                  to="/scan" 
+                  className={({ isActive }) => 
+                    `${linkBase} ${isActive ? 'bg-black text-white' : 'text-black/70 hover:bg-black/5 hover:text-black'}`
+                  }
+                >
+                  <FiUpload className="inline mr-1" /> Scan
+                </NavLink>
+              )}
               
               <NavLink 
                 to="/dashboard" 
@@ -421,19 +423,21 @@ export default function Navbar() {
               <FiHome className="text-lg" /> Home
             </NavLink>
             
-            <NavLink 
-              to="/scan" 
-              className={({ isActive }) => 
-                `${mobileLinkBase} flex items-center gap-3 ${
-                  isActive 
-                    ? 'bg-black text-white' 
-                    : 'text-black/70 hover:bg-black/5 hover:text-black'
-                }`
-              }
-              onClick={closeMobileMenu}
-            >
-              <FiUpload className="text-lg" /> Scan Medicine
-            </NavLink>
+            {user?.role === "caregiver" && (
+              <NavLink 
+                to="/scan" 
+                className={({ isActive }) => 
+                  `${mobileLinkBase} flex items-center gap-3 ${
+                    isActive 
+                      ? 'bg-black text-white' 
+                      : 'text-black/70 hover:bg-black/5 hover:text-black'
+                  }`
+                }
+                onClick={closeMobileMenu}
+              >
+                <FiUpload className="text-lg" /> Scan Medicine
+              </NavLink>
+            )}
             
             <NavLink 
               to="/dashboard" 

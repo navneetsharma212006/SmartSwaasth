@@ -5,7 +5,7 @@ import StatusBadge from "../components/StatusBadge.jsx";
 import ScheduleManager from "../components/ScheduleManager.jsx";
 import InteractionAlert from "../components/InteractionAlert.jsx";
 import PushNotificationToggle from "../components/PushNotificationToggle.jsx";
-import { deleteMedicine, listMedicines, updateMedicine, checkInteractions } from "../lib/api.js";
+import { listMedicines, updateMedicine, checkInteractions } from "../lib/api.js";
 import { formatDate, getExpiryStatus } from "../lib/expiry.js";
 
 export default function DashboardPage() {
@@ -15,8 +15,7 @@ export default function DashboardPage() {
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState(null);
-  const [editValues, setEditValues] = useState({ name: "", expiryDate: "", dosageInstructions: "" });
+  const [loading, setLoading] = useState(true);
   const [interactions, setInteractions] = useState([]);
   const [showInteractions, setShowInteractions] = useState(false);
 
@@ -36,36 +35,6 @@ export default function DashboardPage() {
   useEffect(() => {
     load();
   }, []);
-
-  const handleDelete = async (id, medicineName) => {
-    const shouldDelete = window.confirm(
-      `Delete "${medicineName}"? This action cannot be undone.`
-    );
-    if (!shouldDelete) return;
-    await deleteMedicine(id);
-    await load();
-  };
-
-  const startEdit = (m) => {
-    setEditingId(m._id);
-    setEditValues({
-      name: m.name,
-      expiryDate: new Date(m.expiryDate).toISOString().slice(0, 10),
-      dosageInstructions: m.dosageInstructions || "",
-    });
-  };
-
-  const saveEdit = async (id) => {
-    const updated = await updateMedicine(id, editValues);
-    setItems((prev) => prev.map((m) => (m._id === id ? updated : m)));
-    setEditingId(null);
-    await load(); // Reload to update interactions
-  };
-
-  const handleScheduleSave = async (id, schedule) => {
-    await updateMedicine(id, { schedule });
-    await load();
-  };
 
   const handleReminderToggle = async (id, enabled) => {
     const m = items.find((x) => x._id === id);
@@ -184,7 +153,6 @@ export default function DashboardPage() {
           <div className="divide-y divide-black/10">
             {items.map((m) => {
               const status = getExpiryStatus(m.expiryDate);
-              const isEditing = editingId === m._id;
               const medicineInteractions = (interactions?.pairs || []).filter(
                 i => i.drugA === m.name || i.drugB === m.name
               );
@@ -205,17 +173,7 @@ export default function DashboardPage() {
                     <div className="flex-1">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          {isEditing ? (
-                            <input
-                              value={editValues.name}
-                              onChange={(e) =>
-                                setEditValues((v) => ({ ...v, name: e.target.value }))
-                              }
-                              className="w-full rounded-md border border-black/15 px-2 py-1 text-lg font-medium"
-                            />
-                          ) : (
-                            <h3 className="text-lg font-semibold">{m.name}</h3>
-                          )}
+                          <h3 className="text-lg font-semibold">{m.name}</h3>
                           
                           <div className="mt-1 flex flex-wrap gap-3 text-sm">
                             <span className="text-black/60">
@@ -256,20 +214,6 @@ export default function DashboardPage() {
                               <strong>Instructions:</strong> {m.dosageInstructions}
                             </p>
                           )}
-                          
-                          {isEditing && (
-                            <div className="mt-2">
-                              <textarea
-                                value={editValues.dosageInstructions}
-                                onChange={(e) =>
-                                  setEditValues((v) => ({ ...v, dosageInstructions: e.target.value }))
-                                }
-                                placeholder="Dosage instructions (e.g., Take two pills twice daily)"
-                                className="w-full rounded-md border border-black/15 px-3 py-2 text-sm"
-                                rows="2"
-                              />
-                            </div>
-                          )}
                         </div>
                         
                         <div className="flex flex-wrap items-center gap-1">
@@ -280,7 +224,7 @@ export default function DashboardPage() {
                           >
                             <FiClipboard /> Checklist
                           </Link>
-                          {pickForInteraction && !isEditing && (
+                          {pickForInteraction && (
                             <button
                               type="button"
                               onClick={() =>
@@ -295,48 +239,13 @@ export default function DashboardPage() {
                               Select
                             </button>
                           )}
-                          {isEditing ? (
-                            <>
-                              <button
-                                onClick={() => saveEdit(m._id)}
-                                className="rounded-md p-2 hover:bg-black/5 text-green-600"
-                                title="Save"
-                              >
-                                <FiCheck />
-                              </button>
-                              <button
-                                onClick={() => setEditingId(null)}
-                                className="rounded-md p-2 hover:bg-black/5"
-                                title="Cancel"
-                              >
-                                <FiX />
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button
-                                onClick={() => startEdit(m)}
-                                className="rounded-md p-2 hover:bg-black/5"
-                                title="Edit"
-                              >
-                                <FiEdit2 />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(m._id, m.name)}
-                                className="rounded-md p-2 text-red-600 hover:bg-red-50"
-                                title="Delete"
-                              >
-                                <FiTrash2 />
-                              </button>
-                            </>
-                          )}
                         </div>
                       </div>
                       
                       <div className="mt-3">
                         <ScheduleManager
                           medicine={m}
-                          onSave={handleScheduleSave}
+                          readOnly={true}
                           onReminderToggle={(enabled) =>
                             handleReminderToggle(m._id, enabled)
                           }
