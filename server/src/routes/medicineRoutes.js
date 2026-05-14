@@ -15,6 +15,7 @@ router.post("/medicine/check-interaction", ic.checkInteraction);
 router.post("/medicines/interactions", ic.checkInteraction);
 
 router.get("/medicines", c.listMedicines);
+router.get("/medicines/prescribed-by/:doctorId", c.listDoctorPrescribedMedicines);
 router.get("/medicine/:id", c.getMedicineById);
 router.put("/medicine/:id", c.updateMedicine);
 router.delete("/medicine/:id", c.deleteMedicine);

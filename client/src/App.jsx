@@ -16,6 +16,7 @@ import PatientsPage from "./pages/PatientsPage.jsx";
 import PatientPlanPage from "./pages/PatientPlanPage.jsx";
 import NotificationsPage from "./pages/NotificationsPage.jsx";
 import ChatPage from "./pages/ChatPage.jsx";
+import DoctorMedicinesPage from "./pages/DoctorMedicinesPage.jsx";
 
 
 import LoginPage from "./pages/LoginPage.jsx";
@@ -57,6 +58,7 @@ export default function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/patients" element={<ProtectedRoute><PatientsPage /></ProtectedRoute>} />
           <Route path="/patient-plan/:patientId" element={<ProtectedRoute><PatientPlanPage /></ProtectedRoute>} />
+          <Route path="/medicines/doctor/:doctorId" element={<ProtectedRoute><DoctorMedicinesPage /></ProtectedRoute>} />
           <Route path="/chat/:userId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
 

@@ -17,6 +17,10 @@ const medicineSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    doctorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
     name: { type: String, required: true, trim: true },
     expiryDate: { type: Date, required: true },
     imageUrl: { type: String },

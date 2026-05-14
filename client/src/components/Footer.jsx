@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { FiShield, FiMail, FiPhone, FiMapPin, FiArrowUp } from "react-icons/fi";
 import { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
 
 export default function Footer() {
+  const { user } = useAuth();
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   // Show/hide scroll to top button
@@ -55,16 +57,20 @@ export default function Footer() {
                     <span>→</span> Home
                   </Link>
                 </li>
-                <li>
-                  <Link to="/scan" className="text-black/60 hover:text-black transition-colors flex items-center gap-2">
-                    <span>→</span> Scan Medicine
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/dashboard" className="text-black/60 hover:text-black transition-colors flex items-center gap-2">
-                    <span>→</span> Dashboard
-                  </Link>
-                </li>
+                {(!user || user.role === "caregiver") && (
+                  <>
+                    <li>
+                      <Link to="/scan" className="text-black/60 hover:text-black transition-colors flex items-center gap-2">
+                        <span>→</span> Scan Medicine
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/dashboard" className="text-black/60 hover:text-black transition-colors flex items-center gap-2">
+                        <span>→</span> Dashboard
+                      </Link>
+                    </li>
+                  </>
+                )}
                 <li>
                   <Link to="/about" className="text-black/60 hover:text-black transition-colors flex items-center gap-2">
                     <span>→</span> About Us

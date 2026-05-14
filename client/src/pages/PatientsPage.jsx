@@ -291,6 +291,13 @@ export default function PatientsPage() {
                           </span>
                         )}
                       </Link>
+                      <Link
+                        to={`/medicines/doctor/${doctor._id}`}
+                        className="inline-flex items-center gap-2 px-4 py-2 border border-black/10 rounded-lg text-sm font-medium text-black hover:bg-black/5 transition-colors"
+                      >
+                        <FiActivity className="text-black/60" />
+                        My Medicines
+                      </Link>
                       <button
                         className="inline-flex items-center gap-2 px-4 py-2 border border-black/10 rounded-lg text-sm font-medium text-black hover:bg-black/5 transition-colors"
                         onClick={() => alert("Settings for this doctor (e.g., share permissions, alerts) will be available soon.")}

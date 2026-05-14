@@ -138,6 +138,11 @@ export async function listPatientMedicines(patientId) {
   return response.data;
 }
 
+export async function getDoctorPrescribedMedicines(doctorId) {
+  const response = await api.get(`/medicines/prescribed-by/${doctorId}`);
+  return response.data;
+}
+
 export async function createPatientManualMedicine(patientId, data) {
   const response = await api.post(`/medicines/patient/${patientId}/manual`, data);
   return response.data;

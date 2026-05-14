@@ -343,6 +343,7 @@ exports.createPatientManualMedicine = async (req, res, next) => {
 
     const payload = {
       userId: patientId,
+      doctorId: req.user.id,
       name: trimmed,
       expiryDate: expiry,
       entryMethod: "manual",
@@ -424,6 +425,20 @@ exports.deletePatientMedicine = async (req, res, next) => {
 
     scheduleReminderRefresh();
     res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// GET /api/medicines/prescribed-by/:doctorId
+exports.listDoctorPrescribedMedicines = async (req, res, next) => {
+  try {
+    const { doctorId } = req.params;
+    const items = await Medicine.find({ 
+      userId: req.user.id, 
+      doctorId: doctorId 
+    }).sort({ expiryDate: 1 });
+    res.json(items);
   } catch (err) {
     next(err);
   }

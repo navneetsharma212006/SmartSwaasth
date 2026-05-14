@@ -190,23 +190,36 @@ export default function Navbar() {
                 </NavLink>
               )}
               
-              <NavLink 
-                to="/dashboard" 
-                className={({ isActive }) => 
-                  `${linkBase} ${isActive ? 'bg-black text-white' : 'text-black/70 hover:bg-black/5 hover:text-black'}`
-                }
-              >
-                <FiGrid className="inline mr-1" /> Dashboard
-              </NavLink>
-
-              <NavLink 
-                to="/patients" 
-                className={({ isActive }) => 
-                  `${linkBase} ${isActive ? 'bg-black text-white' : 'text-black/70 hover:bg-black/5 hover:text-black'}`
-                }
-              >
-                <FiUsers className="inline mr-1" /> {user.role === "caregiver" ? "Patients" : "Connect"}
-              </NavLink>
+              {user.role === "patient" && (
+                <NavLink 
+                  to="/patients" 
+                  className={({ isActive }) => 
+                    `${linkBase} ${isActive ? 'bg-black text-white' : 'text-black/70 hover:bg-black/5 hover:text-black'}`
+                  }
+                >
+                  <FiUsers className="inline mr-1" /> Connect
+                </NavLink>
+              )}
+              {user.role === "caregiver" && (
+                <>
+                  <NavLink 
+                    to="/dashboard" 
+                    className={({ isActive }) => 
+                      `${linkBase} ${isActive ? 'bg-black text-white' : 'text-black/70 hover:bg-black/5 hover:text-black'}`
+                    }
+                  >
+                    <FiGrid className="inline mr-1" /> Dashboard
+                  </NavLink>
+                  <NavLink 
+                    to="/patients" 
+                    className={({ isActive }) => 
+                      `${linkBase} ${isActive ? 'bg-black text-white' : 'text-black/70 hover:bg-black/5 hover:text-black'}`
+                    }
+                  >
+                    <FiUsers className="inline mr-1" /> Patients
+                  </NavLink>
+                </>
+              )}
 
             </>
           )}
@@ -439,21 +452,7 @@ export default function Navbar() {
               </NavLink>
             )}
             
-            <NavLink 
-              to="/dashboard" 
-              className={({ isActive }) => 
-                `${mobileLinkBase} flex items-center gap-3 ${
-                  isActive 
-                    ? 'bg-black text-white' 
-                    : 'text-black/70 hover:bg-black/5 hover:text-black'
-                }`
-              }
-              onClick={closeMobileMenu}
-            >
-              <FiGrid className="text-lg" /> Dashboard
-            </NavLink>
-
-            {user && (
+            {user?.role === "patient" && (
               <NavLink 
                 to="/patients" 
                 className={({ isActive }) => 
@@ -465,8 +464,39 @@ export default function Navbar() {
                 }
                 onClick={closeMobileMenu}
               >
-                <FiUsers className="text-lg" /> {user.role === "caregiver" ? "Patients" : "Connect"}
+                <FiUsers className="text-lg" /> Connect
               </NavLink>
+            )}
+            
+            {user?.role === "caregiver" && (
+              <>
+                <NavLink 
+                  to="/dashboard" 
+                  className={({ isActive }) => 
+                    `${mobileLinkBase} flex items-center gap-3 ${
+                      isActive 
+                        ? 'bg-black text-white' 
+                        : 'text-black/70 hover:bg-black/5 hover:text-black'
+                    }`
+                  }
+                  onClick={closeMobileMenu}
+                >
+                  <FiGrid className="text-lg" /> Dashboard
+                </NavLink>
+                <NavLink 
+                  to="/patients" 
+                  className={({ isActive }) => 
+                    `${mobileLinkBase} flex items-center gap-3 ${
+                      isActive 
+                        ? 'bg-black text-white' 
+                        : 'text-black/70 hover:bg-black/5 hover:text-black'
+                    }`
+                  }
+                  onClick={closeMobileMenu}
+                >
+                  <FiUsers className="text-lg" /> Patients
+                </NavLink>
+              </>
             )}
 
             {user ? (
