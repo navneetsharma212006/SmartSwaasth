@@ -31,7 +31,40 @@ function MessageText({ text }) {
   );
 }
 
-/* ── Typing dots animation ─────────────────────────────── */
+/* ── SwaasthSaathi brand SVG logo ─────────────────────── */
+function SaathiLogo({ size = 28, glow = false }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 48 48"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      style={glow ? { filter: "drop-shadow(0 0 8px rgba(167,139,250,0.8))" } : {}}
+    >
+      {/* Shield background */}
+      <path
+        d="M24 4L6 11v12c0 10 7.5 19.3 18 22 10.5-2.7 18-12 18-22V11L24 4z"
+        fill="url(#sg)"
+      />
+      {/* Heartbeat / ECG line */}
+      <polyline
+        points="11,24 16,24 18,18 21,30 25,14 28,30 31,24 37,24"
+        stroke="white"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      <defs>
+        <linearGradient id="sg" x1="6" y1="4" x2="42" y2="48" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#818cf8" />
+          <stop offset="100%" stopColor="#4f46e5" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
 function TypingDots() {
   return (
     <div style={{ display: "flex", gap: 4, alignItems: "center", padding: "10px 0" }}>
@@ -150,7 +183,6 @@ export default function SwaasthSaathi() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 28,
           boxShadow: "0 8px 32px rgba(99,102,241,0.45)",
           animation: open ? "none" : "saathiPulse 2s infinite",
           transition: "transform 0.2s",
@@ -158,7 +190,13 @@ export default function SwaasthSaathi() {
         onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
         onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
       >
-        {open ? "✕" : "🤖"}
+        {open ? (
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6l12 12" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+          </svg>
+        ) : (
+          <SaathiLogo size={34} glow />
+        )}
       </button>
 
       {/* ── Chat window ───────────────────────────────────── */}
@@ -192,19 +230,18 @@ export default function SwaasthSaathi() {
             }}
           >
             <div
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: "50%",
-                background: "rgba(255,255,255,0.2)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 22,
-              }}
-            >
-              🤖
-            </div>
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: "50%",
+              background: "rgba(255,255,255,0.2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <SaathiLogo size={26} />
+          </div>
             <div>
               <div style={{ color: "#fff", fontWeight: 700, fontSize: 16, lineHeight: 1.2 }}>
                 SwaasthSaathi
@@ -256,13 +293,12 @@ export default function SwaasthSaathi() {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontSize: 14,
                       flexShrink: 0,
                       marginRight: 8,
                       alignSelf: "flex-end",
                     }}
                   >
-                    🤖
+                    <SaathiLogo size={18} />
                   </div>
                 )}
                 <div
@@ -302,10 +338,9 @@ export default function SwaasthSaathi() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 14,
                   }}
                 >
-                  🤖
+                  <SaathiLogo size={18} />
                 </div>
                 <div
                   style={{

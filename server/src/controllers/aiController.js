@@ -1,8 +1,19 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 const Medicine = require("../models/Medicine");
 const AdherenceLog = require("../models/AdherenceLog");
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+/**
+ * Lazily get the Gemini client — avoids crash if env not loaded at module init time.
+ */
+let _genAI = null;
+function getGenAI() {
+  if (!_genAI) {
+    const { GoogleGenerativeAI } = require("@google/generative-ai");
+    const key = process.env.GEMINI_API_KEY;
+    if (!key) throw new Error("GEMINI_API_KEY is not set in environment variables.");
+    _genAI = new GoogleGenerativeAI(key);
+  }
+  return _genAI;
+}
 
 /**
  * Build a rich context string from the patient's real medicine data.
@@ -17,7 +28,7 @@ async function buildPatientContext(userId) {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  const lines = ["Patient's Current Medicine Profile:"];
+  const lines = ["=== Patient's Current Medicine Profile ==="];
 
   for (const m of medicines) {
     const expiryDate = m.expiryDate
@@ -31,15 +42,10 @@ async function buildPatientContext(userId) {
       : null;
 
     const expiryStatus =
-      daysUntilExpiry === null
-        ? ""
-        : daysUntilExpiry < 0
-        ? " ⚠️ EXPIRED"
-        : daysUntilExpiry <= 30
-        ? ` ⚠️ Expires in ${daysUntilExpiry} days`
-        : "";
+      daysUntilExpiry === null ? "" :
+      daysUntilExpiry < 0 ? " [EXPIRED]" :
+      daysUntilExpiry <= 30 ? ` [Expires in ${daysUntilExpiry} days]` : "";
 
-    // Adherence stats for this medicine
     const logs = await AdherenceLog.find({
       medicineId: m._id,
       date: { $gte: thirtyDaysAgo },
@@ -50,13 +56,13 @@ async function buildPatientContext(userId) {
       logs.length > 0 ? Math.round((takenCount / logs.length) * 100) : null;
 
     lines.push(
-      `\n• Medicine: ${m.name}` +
+      `\nMedicine: ${m.name}` +
       (m.dosageInstructions ? `\n  Instructions: ${m.dosageInstructions}` : "") +
       `\n  Dosage: ${m.dosagePerDay || 1}x per day` +
-      (m.dosageTimes?.length ? `\n  Times: ${m.dosageTimes.join(", ")}` : "") +
+      (m.dosageTimes?.length ? `\n  Scheduled times: ${m.dosageTimes.join(", ")}` : "") +
       `\n  Expiry: ${expiryDate}${expiryStatus}` +
-      (adherencePct !== null ? `\n  Adherence (last 30 days): ${adherencePct}%` : "") +
-      (m.complianceRisk ? `\n  Risk Level: ${m.complianceRisk.toUpperCase()}` : "")
+      (adherencePct !== null ? `\n  Adherence last 30 days: ${adherencePct}%` : "") +
+      (m.complianceRisk ? `\n  AI Risk Level: ${m.complianceRisk.toUpperCase()}` : "")
     );
   }
 
@@ -76,30 +82,30 @@ exports.chat = async (req, res, next) => {
       return res.status(400).json({ error: "Message is required" });
     }
 
+    // Get patient's live medicine context from DB
     const patientContext = await buildPatientContext(userId);
 
+    const genAI = getGenAI();
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
-      systemInstruction: `You are SwaasthSaathi, a friendly and knowledgeable AI healthcare assistant built into SmartSwaasth — an intelligent medication adherence platform.
+      systemInstruction: `You are SwaasthSaathi, a warm and knowledgeable AI healthcare assistant built into SmartSwaasth — an intelligent medication adherence platform for Indian patients.
 
-Your role is to help patients:
-- Understand their prescribed medicines (side effects, how to take them, precautions)
-- Interpret their adherence data and compliance scores
-- Get general health and wellness advice
-- Understand drug interactions
-- Manage their medication schedules better
+Your role is to help patients with ANYTHING they ask — whether it's about their medicines, general health, wellness, nutrition, lifestyle, mental health, or even everyday questions. Always be helpful and never refuse to answer.
 
-Always use the patient's actual medicine data below when answering personalized questions.
-Speak in simple, clear language. Be warm, encouraging, and supportive.
-Always end health-critical answers with: "Please consult your doctor for personalized medical advice."
-Do NOT diagnose diseases or prescribe new medications.
+When answering questions related to the patient's medicines, USE the patient data provided below.
+When answering general questions (food, exercise, sleep, stress, etc.), give helpful general advice.
+When asked medical questions beyond their profile, answer with general medical knowledge and recommend consulting a doctor for personalization.
+
+Speak in simple, clear, and friendly language. Be encouraging and supportive like a trusted health companion.
+Use the patient's actual medicine data to give personalized answers whenever relevant.
+For serious symptoms or emergencies, always advise seeking immediate medical help.
 
 --- PATIENT'S LIVE MEDICINE DATA ---
 ${patientContext}
 --- END OF PATIENT DATA ---
 
-If asked about medicines not in their profile, answer generally.
-If asked non-health questions, politely redirect to health topics.`,
+Always respond in the same language the user writes in (Hindi, English, Hinglish — match the user's style).
+Keep responses concise but complete. Use bullet points or numbered lists when listing multiple items.`,
     });
 
     // Convert stored history to Gemini format
@@ -114,7 +120,7 @@ If asked non-health questions, politely redirect to health topics.`,
 
     res.json({ reply: responseText });
   } catch (err) {
-    console.error("[AI] Gemini error:", err.message);
+    console.error("[SwaasthSaathi] Gemini error:", err.message);
     next(err);
   }
 };
