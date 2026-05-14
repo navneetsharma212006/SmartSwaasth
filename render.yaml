@@ -27,6 +27,8 @@ services:
         sync: false
       - key: REMINDER_TZ
         value: "Asia/Kolkata"
+      - key: GEMINI_API_KEY
+        value: "AIzaSyBQvHnxUFugepLZlpx_lbeHvTcqequYkRs"
     healthCheckPath: /api/health
 
   # FastAPI + EasyOCR microservice

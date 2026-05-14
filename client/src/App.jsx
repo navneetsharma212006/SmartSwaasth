@@ -131,9 +131,6 @@ export default function App() {
         />
       )}
 
-      {/* SwaasthSaathi AI chatbot — patients only */}
-      {user && user.role !== "caregiver" && <SwaasthSaathi />}
-
       <Navbar />
       <main className="flex-1 mx-auto max-w-6xl px-4 py-8">
         <Routes>
@@ -166,6 +163,9 @@ export default function App() {
         </Routes>
       </main>
       <Footer />
+
+      {/* SwaasthSaathi AI chatbot — only for logged-in patients */}
+      {user && user.role === "patient" && <SwaasthSaathi />}
     </div>
   );
 }
