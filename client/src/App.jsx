@@ -24,7 +24,6 @@ import RegisterPage from "./pages/RegisterPage.jsx";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext.jsx";
 import { getSocket } from "./lib/socket.js";
-import SwaasthSaathi from "./components/SwaasthSaathi.jsx";
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -163,9 +162,6 @@ export default function App() {
         </Routes>
       </main>
       <Footer />
-
-      {/* SwaasthSaathi AI chatbot — only for logged-in patients */}
-      {user && user.role === "patient" && <SwaasthSaathi />}
     </div>
   );
 }

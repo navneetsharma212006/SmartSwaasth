@@ -172,8 +172,4 @@ export async function deletePatientMedicine(patientId, medicineId) {
   const response = await api.delete(`/medicines/patient/${patientId}/${medicineId}`);
   return response.data;
 }
-// --- SwaasthSaathi AI Chat ---
-export const sendAIChatMessage = async (message, history) => {
-  const { data } = await api.post('/ai/chat', { message, history });
-  return data;
-};
+
