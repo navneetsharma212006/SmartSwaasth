@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
-const { protect } = require("../middleware/authMiddleware");
+const protect = require("../middleware/authMiddleware");
 const Medicine = require("../models/Medicine");
 const AdherenceLog = require("../models/AdherenceLog");
 
