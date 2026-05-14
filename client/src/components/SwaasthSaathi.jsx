@@ -127,11 +127,12 @@ export default function SwaasthSaathi() {
       const { reply } = await sendAIChatMessage(msg, history);
       setMessages((prev) => [...prev, { role: "model", parts: reply }]);
     } catch (err) {
+      const errorMsg = err.response?.data?.error || err.message || "Unknown error";
       setMessages((prev) => [
         ...prev,
         {
           role: "model",
-          parts: "Sorry, I'm having trouble connecting right now. Please try again in a moment. 🙏",
+          parts: `**Error:** ${errorMsg}\n\nPlease verify your GEMINI_API_KEY in the Render dashboard and ensure the server has finished restarting.`,
         },
       ]);
     } finally {
