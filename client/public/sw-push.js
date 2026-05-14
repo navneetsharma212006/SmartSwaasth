@@ -18,13 +18,11 @@ self.addEventListener("push", (event) => {
     body: data.body || "You have a new notification",
     icon: "/icons/icon-192.png",
     badge: "/icons/icon-192.png",
-    // Aggressive vibration pattern for medicine alerts
     vibrate: isDosage
       ? [500, 200, 500, 200, 500, 200, 1000]
       : [200, 100, 200],
     tag: data.tag || "smartswaasth-notification",
     renotify: true,
-    // Stay on screen until user acts (key for alarm-style)
     requireInteraction: true,
     silent: false,
     data: {
@@ -48,7 +46,23 @@ self.addEventListener("push", (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || "SmartSwaasth", options)
+    self.registration.showNotification(data.title || "SmartSwaasth", options).then(() => {
+      // If it's a dosage reminder, message all open app windows so they
+      // can immediately play the alarm sound (SW cannot play audio itself)
+      if (isDosage) {
+        return self.clients
+          .matchAll({ includeUncontrolled: true, type: "window" })
+          .then((clientList) => {
+            clientList.forEach((client) => {
+              client.postMessage({
+                type: "DOSAGE_ALARM",
+                medicineName: data.medicineName,
+                dosageTime: data.dosageTime,
+              });
+            });
+          });
+      }
+    })
   );
 });
 

@@ -72,9 +72,30 @@ export default function App() {
 
     socket.on("notification:new", handleNotif);
 
+    // ── Service Worker → tab messaging ──────────────────────────────────────
+    // When a push arrives while the tab is open (even if minimized/backgrounded),
+    // the SW sends us a DOSAGE_ALARM postMessage so we can play audio immediately.
+    const handleSwMessage = (event) => {
+      if (event.data?.type !== "DOSAGE_ALARM") return;
+      setAlarmQueue((prev) => [
+        ...prev,
+        {
+          medicine: { name: event.data.medicineName || "Medicine" },
+          timeStr: event.data.dosageTime || "",
+        },
+      ]);
+    };
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener("message", handleSwMessage);
+    }
+
     return () => {
       socket.off("connect", joinRoom);
       socket.off("notification:new", handleNotif);
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.removeEventListener("message", handleSwMessage);
+      }
     };
   }, [user]);
 
