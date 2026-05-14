@@ -58,7 +58,11 @@ async function runDosageReminderForTime(timeStr) {
       
       const io = getIo();
       if (io) {
-        io.emit("notification:new", { ...notif.toObject(), medicineId: { _id: m._id, name: m.name } });
+        // Target ONLY this patient's socket room — not all connected users
+        io.to(`user:${m.userId}`).emit("notification:new", {
+          ...notif.toObject(),
+          medicineId: { _id: m._id, name: m.name },
+        });
       }
 
       // Send push notification
@@ -180,7 +184,11 @@ function scheduleExpiryForMedicine(med) {
       
       const io = getIo();
       if (io) {
-        io.emit("notification:new", { ...notif.toObject(), medicineId: { _id: med._id, name: fresh.name } });
+        // Target ONLY this patient's socket room — not all connected users
+        io.to(`user:${med.userId}`).emit("notification:new", {
+          ...notif.toObject(),
+          medicineId: { _id: med._id, name: fresh.name },
+        });
       }
 
       // Send push notification
