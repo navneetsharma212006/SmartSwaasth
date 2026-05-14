@@ -65,6 +65,9 @@ async function runDosageReminderForTime(timeStr) {
       sendPushToUser(m.userId.toString(), {
         title: "💊 Daily Dose Reminder",
         body: `Time to take ${m.name} (${timeStr}).`,
+        type: "dosage",
+        medicineName: m.name,
+        dosageTime: timeStr,
         url: "/dashboard",
         tag: `dosage-${m._id}-${timeStr}`,
       }).catch((err) => console.error("[push] dosage push failed", err.message));

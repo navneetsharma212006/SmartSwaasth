@@ -19,16 +19,13 @@ import {
   FiLogIn,
   FiUsers
 } from "react-icons/fi";
-import { io } from "socket.io-client";
+import { getSocket } from "../lib/socket.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import {
   fetchNotifications,
   markNotificationRead,
   markAllNotificationsRead,
 } from "../lib/api.js";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-const SOCKET_URL = API_BASE_URL.replace("/api", "");
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -87,48 +84,50 @@ export default function Navbar() {
   useEffect(() => {
     loadNotifications();
 
-    const socket = io(SOCKET_URL);
+    const socket = getSocket();
 
-    socket.on("connect", () => {
+    const onConnect = () => {
       console.log("[socket] Connected to notification socket");
-      // Join personal room so server can target this user directly
       if (user?._id) {
         socket.emit("join_user_room", { userId: user._id });
       }
-    });
+    };
 
     // Medicine / expiry notifications
-    socket.on("notification:new", (notif) => {
+    const onNotif = (notif) => {
       setNotifications((prev) => [notif, ...prev]);
       setUnreadCount((c) => c + 1);
       if (Notification.permission === "granted") {
         new Notification(notif.title, {
           body: notif.message,
-          icon: "/pwa-192x192.png",
+          icon: "/icons/icon-192.png",
         });
       }
-    });
+    };
 
     // Chat message notifications — show Instagram-style banner
-    socket.on("notification:chat", ({ from, content }) => {
-      // Increment the unread badge so chat icon updates
+    const onChat = ({ from, content }) => {
       setUnreadCount((c) => c + 1);
-      // Show an in-app toast banner
       setChatToast({ from, content, url: `/chat/${from}` });
-      // Auto-dismiss after 6 seconds
       setTimeout(() => setChatToast(null), 6000);
-      // Also fire a browser push if app is in background
       if (Notification.permission === "granted") {
         new Notification("💬 New Message", {
           body: content.length > 80 ? content.slice(0, 77) + "…" : content,
-          icon: "/pwa-192x192.png",
+          icon: "/icons/icon-192.png",
           tag: `chat-${from}`,
         });
       }
-    });
+    };
+
+    if (socket.connected) onConnect();
+    socket.on("connect", onConnect);
+    socket.on("notification:new", onNotif);
+    socket.on("notification:chat", onChat);
 
     return () => {
-      socket.disconnect();
+      socket.off("connect", onConnect);
+      socket.off("notification:new", onNotif);
+      socket.off("notification:chat", onChat);
     };
   }, [loadNotifications, user?._id]);
 
