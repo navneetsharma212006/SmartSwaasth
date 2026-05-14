@@ -22,6 +22,7 @@ router.delete("/medicine/:id", c.deleteMedicine);
 
 // Caregiver routes
 router.get("/medicines/patient/:patientId", c.listPatientMedicines);
+router.post("/medicines/patient/:patientId/extract", upload.single("image"), c.extractPatientMedicine);
 router.post("/medicines/patient/:patientId/manual", c.createPatientManualMedicine);
 router.put("/medicines/patient/:patientId/:medicineId", c.updatePatientMedicine);
 router.delete("/medicines/patient/:patientId/:medicineId", c.deletePatientMedicine);

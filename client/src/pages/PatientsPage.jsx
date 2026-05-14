@@ -228,7 +228,7 @@ export default function PatientsPage() {
                         className="inline-flex items-center gap-2 px-4 py-2 border border-black/10 rounded-lg text-sm font-medium text-black hover:bg-black/5 transition-colors"
                       >
                         <FiClipboard className="text-black/60" />
-                        Manage Plan
+                        Dashboard
                         <FiExternalLink className="text-[10px]" />
                       </Link>
                     </div>

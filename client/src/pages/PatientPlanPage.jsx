@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { 
   FiTrash2, 
   FiEdit2, 
@@ -25,6 +25,7 @@ import StatusBadge from "../components/StatusBadge";
 
 export default function PatientPlanPage() {
   const { patientId } = useParams();
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -118,6 +119,12 @@ export default function PatientPlanPage() {
               <FiActivity /> {interactions.length} Interaction{interactions.length > 1 ? "s" : ""}
             </button>
           )}
+          <button
+            onClick={() => navigate(`/scan/${patientId}`)}
+            className="inline-flex items-center gap-2 px-4 py-2 border border-black/10 text-black bg-white rounded-lg hover:bg-black/5 transition-all"
+          >
+            <FiActivity /> Scan Medicine
+          </button>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
             className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-black/90 transition-all"

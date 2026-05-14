@@ -2,7 +2,8 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiUpload, FiCamera, FiLoader, FiImage, FiEdit3 } from "react-icons/fi";
 import CameraCapture from "../components/CameraCapture.jsx";
-import { extractMedicine, createManualMedicine } from "../lib/api.js";
+import { extractMedicine, createManualMedicine, extractPatientMedicine, createPatientManualMedicine } from "../lib/api.js";
+import { useParams } from "react-router-dom";
 
 function DosageFields({ dosageCount, dosageTimes, onCountChange, onTimeChange }) {
   return (
@@ -60,6 +61,7 @@ export default function UploadPage() {
   const [showCamera, setShowCamera] = useState(false);
   const [mode, setMode] = useState("scan");
   const navigate = useNavigate();
+  const { patientId } = useParams();
 
   const [dosageCount, setDosageCount] = useState(1);
   const [dosageTimes, setDosageTimes] = useState([""]);
@@ -128,8 +130,14 @@ export default function UploadPage() {
     setLoading(true);
     setError("");
     try {
-      const data = await extractMedicine(file, buildDosagePayload());
-      navigate("/result", { state: data });
+      let data;
+      if (patientId) {
+        data = await extractPatientMedicine(patientId, file, buildDosagePayload());
+        navigate(`/result/${patientId}`, { state: data });
+      } else {
+        data = await extractMedicine(file, buildDosagePayload());
+        navigate("/result", { state: data });
+      }
     } catch (e) {
       setError(e.response?.data?.error || "Failed to extract medicine info.");
     } finally {
@@ -154,8 +162,14 @@ export default function UploadPage() {
         syrupAmountMl: form.syrupAmountMl.trim(),
         ...buildDosagePayload(),
       };
-      const data = await createManualMedicine(payload);
-      navigate("/result", { state: data });
+      let data;
+      if (patientId) {
+        data = await createPatientManualMedicine(patientId, payload);
+        navigate(`/result/${patientId}`, { state: data });
+      } else {
+        data = await createManualMedicine(payload);
+        navigate("/result", { state: data });
+      }
     } catch (err) {
       setError(
         err.response?.data?.error || "Could not save medicine. Please try again."

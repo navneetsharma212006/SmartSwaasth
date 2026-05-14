@@ -309,6 +309,59 @@ exports.listPatientMedicines = async (req, res, next) => {
   }
 };
 
+// POST /api/medicines/patient/:patientId/extract
+exports.extractPatientMedicine = async (req, res, next) => {
+  try {
+    const { patientId } = req.params;
+    if (!req.file) {
+      return res.status(400).json({ error: "No image provided" });
+    }
+
+    const { rawText, parsedData } = await ocrService.extractTextAndParse(
+      req.file.path
+    );
+
+    let expiryDate = new Date();
+    expiryDate.setMonth(expiryDate.getMonth() + 1);
+    if (parsedData.expiryDate) {
+      const pDate = new Date(parsedData.expiryDate);
+      if (!isNaN(pDate.getTime())) {
+        expiryDate = pDate;
+      }
+    }
+
+    const dosage = parseDosage(req.body);
+
+    const med = new Medicine({
+      userId: patientId,
+      doctorId: req.user.id,
+      name: parsedData.medicineName || "Unknown Medicine",
+      expiryDate,
+      imageUrl: `/uploads/${req.file.filename}`,
+      rawText,
+      entryMethod: "scan",
+      dosagePerDay: dosage.dosagePerDay,
+      dosageTimes: dosage.dosageTimes,
+      dailyDosageReminderEnabled: false,
+      expiryReminderEnabled: false,
+      schedule: {
+        enabled: true,
+        times: dosage.dosageTimes,
+        dosage: `${dosage.dosagePerDay}× daily`,
+      },
+    });
+
+    await med.save();
+
+    res.json({
+      medicine: med,
+      ocr: { rawText },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // POST /api/medicines/patient/:patientId/manual
 exports.createPatientManualMedicine = async (req, res, next) => {
   try {

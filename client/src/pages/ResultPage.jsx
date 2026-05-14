@@ -1,15 +1,16 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { FiArrowLeft, FiGrid, FiAlertTriangle } from "react-icons/fi";
 import StatusBadge from "../components/StatusBadge.jsx";
 import InteractionAlert from "../components/InteractionAlert.jsx";
 import ScheduleManager from "../components/ScheduleManager.jsx";
 import { formatDate, getExpiryStatus } from "../lib/expiry.js";
-import { checkInteractions, updateMedicine } from "../lib/api.js";
+import { checkInteractions, updateMedicine, updatePatientMedicine } from "../lib/api.js";
 
 export default function ResultPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
+  const { patientId } = useParams();
   const [interactions, setInteractions] = useState([]);
   const [showInteractions, setShowInteractions] = useState(false);
   const [medicine, setMedicine] = useState(null);
@@ -23,7 +24,12 @@ export default function ResultPage() {
   }, [state]);
 
   const handleScheduleSave = async (id, schedule) => {
-    const updated = await updateMedicine(id, { schedule });
+    let updated;
+    if (patientId) {
+      updated = await updatePatientMedicine(patientId, id, { schedule });
+    } else {
+      updated = await updateMedicine(id, { schedule });
+    }
     setMedicine(updated);
   };
 
@@ -32,7 +38,8 @@ export default function ResultPage() {
       medicine.schedule?.times?.length > 0
         ? [...medicine.schedule.times]
         : [...(medicine.dosageTimes || [])];
-    const updated = await updateMedicine(medicine._id, {
+    
+    const payload = {
       dailyDosageReminderEnabled: enabled,
       expiryReminderEnabled: enabled,
       schedule: {
@@ -43,7 +50,14 @@ export default function ResultPage() {
           medicine.schedule?.dosage ||
           (medicine.dosagePerDay ? `${medicine.dosagePerDay}× daily` : ""),
       },
-    });
+    };
+    
+    let updated;
+    if (patientId) {
+      updated = await updatePatientMedicine(patientId, medicine._id, payload);
+    } else {
+      updated = await updateMedicine(medicine._id, payload);
+    }
     setMedicine(updated);
   };
 
@@ -68,12 +82,21 @@ export default function ResultPage() {
     <div className="mx-auto max-w-2xl">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-semibold tracking-tight">Medicine Details</h1>
-        <Link
-          to="/dashboard"
-          className="inline-flex items-center gap-2 rounded-md border border-black/15 px-3 py-2 text-sm hover:bg-black/5"
-        >
-          <FiGrid /> Dashboard
-        </Link>
+        {patientId ? (
+          <Link
+            to={`/patient-plan/${patientId}`}
+            className="inline-flex items-center gap-2 rounded-md border border-black/15 px-3 py-2 text-sm hover:bg-black/5"
+          >
+            <FiGrid /> Patient Dashboard
+          </Link>
+        ) : (
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-2 rounded-md border border-black/15 px-3 py-2 text-sm hover:bg-black/5"
+          >
+            <FiGrid /> Dashboard
+          </Link>
+        )}
       </div>
 
       {hasInteractions && (
@@ -170,14 +193,14 @@ export default function ResultPage() {
 
       <div className="mt-6 flex justify-between">
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate(patientId ? `/scan/${patientId}` : "/")}
           className="inline-flex items-center gap-2 rounded-md border border-black/15 px-4 py-2 text-sm hover:bg-black/5"
         >
           <FiArrowLeft /> Add another
         </button>
         <button
           type="button"
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate(patientId ? `/patient-plan/${patientId}` : "/dashboard")}
           className="inline-flex items-center justify-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-black/90"
         >
           Submit

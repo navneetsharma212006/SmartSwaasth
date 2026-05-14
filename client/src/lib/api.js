@@ -143,6 +143,21 @@ export async function getDoctorPrescribedMedicines(doctorId) {
   return response.data;
 }
 
+export async function extractPatientMedicine(patientId, imageFile, dosage) {
+  const formData = new FormData();
+  formData.append("image", imageFile);
+  if (dosage) {
+    formData.append("dosagePerDay", String(dosage.dosagePerDay));
+    formData.append("dosageTimes", JSON.stringify(dosage.dosageTimes));
+  }
+
+  const response = await api.post(`/medicines/patient/${patientId}/extract`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
+  return response.data;
+}
+
 export async function createPatientManualMedicine(patientId, data) {
   const response = await api.post(`/medicines/patient/${patientId}/manual`, data);
   return response.data;

@@ -57,7 +57,7 @@ export default function Footer() {
                     <span>→</span> Home
                   </Link>
                 </li>
-                {(!user || user.role === "caregiver") && (
+                {!user && (
                   <>
                     <li>
                       <Link to="/scan" className="text-black/60 hover:text-black transition-colors flex items-center gap-2">

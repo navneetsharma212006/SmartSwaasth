@@ -41,7 +41,9 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/scan" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
+          <Route path="/scan/:patientId" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
           <Route path="/result" element={<ProtectedRoute><ResultPage /></ProtectedRoute>} />
+          <Route path="/result/:patientId" element={<ProtectedRoute><ResultPage /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route
             path="/medicine-interaction"
