@@ -10,7 +10,8 @@ import {
   FiCheckCircle,
   FiAlertCircle,
   FiMessageSquare,
-  FiSettings
+  FiSettings,
+  FiActivity
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import { 
