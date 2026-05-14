@@ -41,6 +41,7 @@ export default function Navbar() {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifLoading, setNotifLoading] = useState(false);
+  const [chatToast, setChatToast] = useState(null); // { from, content, url }
 
   // Toggle mobile menu
   const toggleMobileMenu = () => {
@@ -85,30 +86,51 @@ export default function Navbar() {
 
   useEffect(() => {
     loadNotifications();
-    
+
     const socket = io(SOCKET_URL);
-    
+
     socket.on("connect", () => {
-      console.log("Connected to notification socket");
+      console.log("[socket] Connected to notification socket");
+      // Join personal room so server can target this user directly
+      if (user?._id) {
+        socket.emit("join_user_room", { userId: user._id });
+      }
     });
-    
+
+    // Medicine / expiry notifications
     socket.on("notification:new", (notif) => {
       setNotifications((prev) => [notif, ...prev]);
       setUnreadCount((c) => c + 1);
-      
-      // Optionally show a browser notification if supported
       if (Notification.permission === "granted") {
         new Notification(notif.title, {
           body: notif.message,
-          icon: "/favicon.ico"
+          icon: "/pwa-192x192.png",
         });
       }
     });
-    
+
+    // Chat message notifications — show Instagram-style banner
+    socket.on("notification:chat", ({ from, content }) => {
+      // Increment the unread badge so chat icon updates
+      setUnreadCount((c) => c + 1);
+      // Show an in-app toast banner
+      setChatToast({ from, content, url: `/chat/${from}` });
+      // Auto-dismiss after 6 seconds
+      setTimeout(() => setChatToast(null), 6000);
+      // Also fire a browser push if app is in background
+      if (Notification.permission === "granted") {
+        new Notification("💬 New Message", {
+          body: content.length > 80 ? content.slice(0, 77) + "…" : content,
+          icon: "/pwa-192x192.png",
+          tag: `chat-${from}`,
+        });
+      }
+    });
+
     return () => {
       socket.disconnect();
     };
-  }, [loadNotifications]);
+  }, [loadNotifications, user?._id]);
 
   useEffect(() => {
     if (!showNotifPanel) return;
@@ -158,7 +180,29 @@ export default function Navbar() {
   const mobileLinkBase = "block px-4 py-3 text-base transition-colors border-b border-black/5";
 
   return (
-    <header className="border-b border-black/10 bg-white sticky top-0 z-40">
+    <>
+      {/* Instagram-style chat toast */}
+      {chatToast && (
+        <div
+          role="alert"
+          className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-3 bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-2xl cursor-pointer animate-in slide-in-from-top-4 duration-300 max-w-sm w-[calc(100%-2rem)]"
+          onClick={() => { navigate(chatToast.url); setChatToast(null); }}
+        >
+          <div className="w-9 h-9 rounded-full bg-emerald-500 flex items-center justify-center shrink-0 text-sm font-bold">
+            💬
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-emerald-400">New Message</p>
+            <p className="text-sm truncate opacity-90">{chatToast.content}</p>
+          </div>
+          <button
+            className="text-white/50 hover:text-white ml-1 shrink-0"
+            onClick={(e) => { e.stopPropagation(); setChatToast(null); }}
+          >✕</button>
+        </div>
+      )}
+
+      <header className="border-b border-black/10 bg-white sticky top-0 z-40">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 font-semibold text-lg">
@@ -641,5 +685,6 @@ export default function Navbar() {
         </div>
       )}
     </header>
+    </>
   );
 }

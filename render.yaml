@@ -25,6 +25,8 @@ services:
         sync: false
       - key: VAPID_EMAIL
         sync: false
+      - key: REMINDER_TZ
+        value: "Asia/Kolkata"
     healthCheckPath: /api/health
 
   # FastAPI + EasyOCR microservice
