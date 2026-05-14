@@ -17,7 +17,8 @@ import {
   generateConnectionOTP, 
   listConnectedPatients, 
   joinDoctor,
-  getConnectedDoctors
+  getConnectedDoctors,
+  getUnreadChatCounts
 } from "../lib/api";
 
 export default function PatientsPage() {
@@ -30,6 +31,16 @@ export default function PatientsPage() {
   const [joinOtp, setJoinOtp] = useState(["", "", "", ""]);
   const [message, setMessage] = useState({ type: "", text: "" });
   const [showConnectForm, setShowConnectForm] = useState(false);
+  const [unreadCounts, setUnreadCounts] = useState({});
+
+  const loadUnreadCounts = async () => {
+    try {
+      const counts = await getUnreadChatCounts();
+      setUnreadCounts(counts);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const isCaregiver = user?.role === "caregiver";
 
@@ -50,6 +61,7 @@ export default function PatientsPage() {
       console.error(err);
     } finally {
       setLoading(false);
+      loadUnreadCounts();
     }
   };
 
@@ -65,6 +77,7 @@ export default function PatientsPage() {
       console.error(err);
     } finally {
       setLoading(false);
+      loadUnreadCounts();
     }
   };
 
@@ -199,10 +212,15 @@ export default function PatientsPage() {
                     <div className="flex items-center gap-2">
                       <Link
                         to={`/chat/${patient._id}`}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-black/90 transition-colors"
+                        className="relative inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-black/90 transition-colors"
                       >
                         <FiMessageSquare />
                         Chat
+                        {unreadCounts[patient._id] > 0 && (
+                          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
+                            {unreadCounts[patient._id]}
+                          </span>
+                        )}
                       </Link>
                       <Link
                         to={`/patient-plan/${patient._id}`}
@@ -263,10 +281,15 @@ export default function PatientsPage() {
                     <div className="flex items-center gap-2">
                       <Link
                         to={`/chat/${doctor._id}`}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-black/90 transition-colors"
+                        className="relative inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-black/90 transition-colors"
                       >
                         <FiMessageSquare />
                         Chat
+                        {unreadCounts[doctor._id] > 0 && (
+                          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
+                            {unreadCounts[doctor._id]}
+                          </span>
+                        )}
                       </Link>
                       <button
                         className="inline-flex items-center gap-2 px-4 py-2 border border-black/10 rounded-lg text-sm font-medium text-black hover:bg-black/5 transition-colors"

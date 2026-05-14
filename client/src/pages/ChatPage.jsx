@@ -46,14 +46,16 @@ export default function ChatPage() {
     socketRef.current = io(SOCKET_URL);
     
     socketRef.current.on("connect", () => {
-      socketRef.current.emit("join_chat", { userId1: user.id, userId2: userId });
+      const myId = user._id || user.id;
+      socketRef.current.emit("join_chat", { userId1: myId, userId2: userId });
     });
 
     socketRef.current.on("receive_message", (message) => {
       // Only append if it belongs to this chat
+      const myId = user._id || user.id;
       if (
-        (message.senderId === user.id && message.receiverId === userId) ||
-        (message.senderId === userId && message.receiverId === user.id)
+        (message.senderId === myId && message.receiverId === userId) ||
+        (message.senderId === userId && message.receiverId === myId)
       ) {
         setMessages((prev) => [...prev, message]);
       }
@@ -72,8 +74,9 @@ export default function ChatPage() {
     e.preventDefault();
     if (!inputText.trim()) return;
 
+    const myId = user._id || user.id;
     const messageData = {
-      senderId: user.id,
+      senderId: myId,
       receiverId: userId,
       content: inputText.trim(),
     };
@@ -125,7 +128,8 @@ export default function ChatPage() {
           </div>
         ) : (
           messages.map((msg, index) => {
-            const isMe = msg.senderId === user.id;
+            const myId = user._id || user.id;
+            const isMe = msg.senderId === myId;
             return (
               <div 
                 key={msg._id || index} 

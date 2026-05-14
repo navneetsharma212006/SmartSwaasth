@@ -128,6 +128,11 @@ export async function getChatHistory(userId) {
   return response.data;
 }
 
+export async function getUnreadChatCounts() {
+  const response = await api.get("/chat/unread");
+  return response.data;
+}
+
 export async function listPatientMedicines(patientId) {
   const response = await api.get(`/medicines/patient/${patientId}`);
   return response.data;
