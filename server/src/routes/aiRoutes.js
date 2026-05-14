@@ -128,8 +128,9 @@ router.post("/chat", protect, async (req, res) => {
       });
     }
 
+    const geminiError = err.response?.data?.error?.message || err.message;
     res.status(500).json({
-      error: "SwaasthSaathi is having trouble thinking. Please try again in a moment.",
+      error: `SwaasthSaathi API Error: ${geminiError}`,
     });
   }
 });
