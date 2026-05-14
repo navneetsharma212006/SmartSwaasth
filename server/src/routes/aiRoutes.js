@@ -138,4 +138,14 @@ router.post("/chat", protect, async (req, res) => {
   }
 });
 
+router.get("/diag", protect, (req, res) => {
+  const key = process.env.GEMINI_API_KEY || "";
+  res.json({
+    hasKey: !!key,
+    length: key.length,
+    prefix: key.substring(0, 7), // "AIzaSy..."
+    suffix: key.substring(key.length - 4),
+  });
+});
+
 module.exports = router;
