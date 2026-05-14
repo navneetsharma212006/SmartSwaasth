@@ -5,18 +5,15 @@ const protect = require("../middleware/authMiddleware");
 const Medicine = require("../models/Medicine");
 const AdherenceLog = require("../models/AdherenceLog");
 
-/**
- * Gemini REST API endpoint.
- * We use v1beta for now as it supports system_instruction and 1.5-flash well.
- */
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 const MODEL_NAME = "gemini-1.5-flash";
 
 /* ── Build patient medicine context from DB ─────────────── */
 async function buildPatientContext(userId) {
   try {
-    const medicines = await Medicine.find({ userId }).lean();
-    if (!medicines.length) return "Patient has no medicines registered yet.";
+    // REMOVED .lean() so that decryption hooks in Medicine model fire correctly!
+    const medicines = await Medicine.find({ userId });
+    if (!medicines || medicines.length === 0) return "Patient has no medicines registered yet.";
 
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -28,18 +25,22 @@ async function buildPatientContext(userId) {
             day: "numeric", month: "long", year: "numeric",
           })
         : "Unknown";
+      
       const daysLeft = m.expiryDate
         ? Math.ceil((new Date(m.expiryDate) - Date.now()) / 86400000)
         : null;
+      
       const expiryTag =
         daysLeft === null ? "" :
         daysLeft < 0 ? " [EXPIRED]" :
         daysLeft <= 30 ? ` [Expires in ${daysLeft} days]` : "";
 
+      // Log check
       const logs = await AdherenceLog.find({
         medicineId: m._id,
         date: { $gte: thirtyDaysAgo },
       }).lean();
+      
       const takenPct = logs.length
         ? Math.round(
             (logs.filter((l) => l.status === "taken").length / logs.length) * 100
@@ -59,7 +60,7 @@ async function buildPatientContext(userId) {
     return lines.join("\n");
   } catch (err) {
     console.error("[SwaasthSaathi Context Error]", err.message);
-    return "Error loading medicine context.";
+    return "Note: There was an error loading your specific medicine details, but I can still help with general questions.";
   }
 }
 
@@ -72,9 +73,9 @@ router.post("/chat", protect, async (req, res) => {
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey.includes("REPLACE_ME")) {
+    if (!apiKey) {
       return res.status(503).json({ 
-        error: "SwaasthSaathi is not configured. Please add a valid GEMINI_API_KEY in the dashboard." 
+        error: "SwaasthSaathi is not configured. Please add a GEMINI_API_KEY in Render." 
       });
     }
 
@@ -82,10 +83,10 @@ router.post("/chat", protect, async (req, res) => {
 
     const systemPrompt =
       `You are SwaasthSaathi, a warm AI health assistant for SmartSwaasth (India). ` +
-      `Help patients with ANYTHING — medicines, health, nutrition, lifestyle, mental wellness, or general questions. Always be helpful. ` +
-      `Use the patient's real medicine data below when relevant. Speak simply and encouragingly. ` +
-      `Match the user's language (English/Hindi/Hinglish). For emergencies, advise immediate medical help.\n\n` +
-      `--- PATIENT MEDICINE DATA ---\n${patientContext}\n--- END ---`;
+      `Help patients with medicines, health, nutrition, and wellness. ` +
+      `Match the user's language (English/Hindi/Hinglish). Use simple terms. ` +
+      `For emergencies, advise seeing a doctor. Use the patient data below if relevant.\n\n` +
+      `--- PATIENT MEDICINE DATA ---\n${patientContext}\n--- END DATA ---`;
 
     // Format history for Gemini API
     const contents = history.map((h) => ({
@@ -93,15 +94,19 @@ router.post("/chat", protect, async (req, res) => {
       parts: [{ text: h.parts }],
     }));
 
-    // Add current message
-    contents.push({ role: "user", parts: [{ text: message }] });
-
+    // Inject system prompt into the first message or as a separate system instruction
+    // We'll use the official system_instruction field
     const payload = {
-      system_instruction: { parts: [{ text: systemPrompt }] },
-      contents,
+      system_instruction: {
+        parts: [{ text: systemPrompt }]
+      },
+      contents: [
+        ...contents,
+        { role: "user", parts: [{ text: message }] }
+      ],
       generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 1024,
+        temperature: 0.8,
+        maxOutputTokens: 800,
       },
     };
 
@@ -109,28 +114,26 @@ router.post("/chat", protect, async (req, res) => {
 
     const { data } = await axios.post(url, payload, {
       headers: { "Content-Type": "application/json" },
-      timeout: 30000,
+      timeout: 45000,
     });
 
     const reply =
       data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "I processed your request but couldn't generate a text response. Please try rephrasing.";
+      "I processed your request but couldn't generate a text response. Please try again.";
 
     res.json({ reply });
   } catch (err) {
     console.error("[SwaasthSaathi API Error]", err.response?.data || err.message);
     
-    // Handle leaked key or other API errors gracefully
-    const errorMsg = err.response?.data?.error?.message || "";
-    if (errorMsg.toLowerCase().includes("leaked") || errorMsg.toLowerCase().includes("invalid")) {
-      return res.status(503).json({ 
-        error: "Invalid or leaked API key. Please update the GEMINI_API_KEY in the environment settings." 
-      });
+    const apiError = err.response?.data?.error?.message || err.message;
+    
+    // Check for specific error types
+    if (apiError.includes("API key not valid") || apiError.includes("leaked")) {
+      return res.status(401).json({ error: "The Gemini API key is invalid or has been disabled. Please update it in Render settings." });
     }
 
-    const geminiError = err.response?.data?.error?.message || err.message;
     res.status(500).json({
-      error: `SwaasthSaathi API Error: ${geminiError}`,
+      error: `SwaasthSaathi Error: ${apiError}`,
     });
   }
 });
