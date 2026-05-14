@@ -118,6 +118,16 @@ export async function listConnectedPatients() {
   return response.data;
 }
 
+export async function getConnectedDoctors() {
+  const response = await api.get("/auth/doctors");
+  return response.data;
+}
+
+export async function getChatHistory(userId) {
+  const response = await api.get(`/chat/${userId}`);
+  return response.data;
+}
+
 export async function listPatientMedicines(patientId) {
   const response = await api.get(`/medicines/patient/${patientId}`);
   return response.data;

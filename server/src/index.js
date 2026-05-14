@@ -12,6 +12,7 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const authRoutes = require("./routes/authRoutes");
 const adherenceRoutes = require("./routes/adherenceRoutes");
 const pushRoutes = require("./routes/pushRoutes");
+const chatRoutes = require("./routes/chatRoutes");
 const { initReminderSchedulers } = require("./services/reminderSchedulers");
 const errorHandler = require("./middleware/errorHandler");
 
@@ -71,6 +72,7 @@ app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
 app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
 app.use("/api/auth", authRoutes);
+app.use("/api/chat", chatRoutes);
 app.use("/api", medicineRoutes);
 app.use("/api", notificationRoutes);
 app.use("/api/adherence", adherenceRoutes);

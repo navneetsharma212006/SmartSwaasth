@@ -465,7 +465,27 @@ export default function Navbar() {
               </NavLink>
             )}
 
-
+            {user ? (
+              <button
+                onClick={() => {
+                  logout();
+                  closeMobileMenu();
+                  navigate("/");
+                }}
+                className={`${mobileLinkBase} flex items-center gap-3 w-full text-left text-red-600 hover:bg-red-50`}
+              >
+                <FiLogOut className="text-lg" /> Logout
+              </button>
+            ) : (
+              <>
+                <Link to="/login" className={`${mobileLinkBase} flex items-center gap-3`} onClick={closeMobileMenu}>
+                  <FiLogIn className="text-lg" /> Login
+                </Link>
+                <Link to="/register" className={`${mobileLinkBase} bg-black text-white hover:bg-black/90 mx-4 rounded-md mt-2 mb-2 text-center py-2`} onClick={closeMobileMenu}>
+                  Register
+                </Link>
+              </>
+            )}
 
             <NavLink
               to="/notifications"

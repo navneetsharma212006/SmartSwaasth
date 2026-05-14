@@ -40,6 +40,15 @@ exports.getPatients = async (req, res, next) => {
   }
 };
 
+exports.getDoctors = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id).populate("caregivers", "name email");
+    res.json(user.caregivers);
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.generateOTP = async (req, res, next) => {
   try {
     if (req.user.role !== "caregiver") {

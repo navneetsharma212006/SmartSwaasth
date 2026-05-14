@@ -8,29 +8,36 @@ import {
   FiExternalLink, 
   FiClipboard,
   FiCheckCircle,
-  FiAlertCircle
+  FiAlertCircle,
+  FiMessageSquare,
+  FiSettings
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import { 
   generateConnectionOTP, 
   listConnectedPatients, 
-  joinDoctor 
+  joinDoctor,
+  getConnectedDoctors
 } from "../lib/api";
 
 export default function PatientsPage() {
   const { user } = useAuth();
   const [patients, setPatients] = useState([]);
+  const [doctors, setDoctors] = useState([]);
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState(null);
   const [joinOtp, setJoinOtp] = useState(["", "", "", ""]);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const [showConnectForm, setShowConnectForm] = useState(false);
 
   const isCaregiver = user?.role === "caregiver";
 
   useEffect(() => {
     if (isCaregiver) {
       loadPatients();
+    } else {
+      loadDoctors();
     }
   }, [isCaregiver]);
 
@@ -39,6 +46,21 @@ export default function PatientsPage() {
     try {
       const data = await listConnectedPatients();
       setPatients(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadDoctors = async () => {
+    setLoading(true);
+    try {
+      const data = await getConnectedDoctors();
+      setDoctors(data);
+      if (data.length === 0) {
+        setShowConnectForm(true);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -84,6 +106,8 @@ export default function PatientsPage() {
       const res = await joinDoctor(otpValue);
       setMessage({ type: "success", text: res.message });
       setJoinOtp(["", "", "", ""]);
+      loadDoctors(); // Reload doctors list
+      setShowConnectForm(false);
     } catch (err) {
       setMessage({ type: "error", text: err.response?.data?.error || "Failed to connect." });
     } finally {
@@ -96,12 +120,12 @@ export default function PatientsPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <FiUsers className="text-black/80" />
-          {isCaregiver ? "Your Patients" : "Connect with Doctor"}
+          {isCaregiver ? "Your Patients" : "Your Care Team"}
         </h1>
         <p className="text-black/60 mt-2">
           {isCaregiver 
             ? "Manage medication plans and monitor adherence for your connected patients."
-            : "Connect with your doctor or caregiver to receive a managed medication plan."}
+            : "View your connected doctors and manage your care team settings."}
         </p>
       </div>
 
@@ -162,7 +186,7 @@ export default function PatientsPage() {
             ) : (
               <div className="divide-y divide-black/5">
                 {patients.map((patient) => (
-                  <div key={patient._id} className="p-6 flex items-center justify-between hover:bg-black/[0.01] transition-colors">
+                  <div key={patient._id} className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-black/[0.01] transition-colors">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-black/5 rounded-full flex items-center justify-center text-xl font-bold text-black/60">
                         {patient.name.charAt(0)}
@@ -172,14 +196,23 @@ export default function PatientsPage() {
                         <p className="text-sm text-black/50">{patient.email}</p>
                       </div>
                     </div>
-                    <Link
-                      to={`/patient-plan/${patient._id}`}
-                      className="inline-flex items-center gap-2 px-4 py-2 border border-black/10 rounded-lg text-sm font-medium text-black hover:bg-black/5 transition-colors"
-                    >
-                      <FiClipboard className="text-black/60" />
-                      Manage Plan
-                      <FiExternalLink className="text-[10px]" />
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        to={`/chat/${patient._id}`}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-black/90 transition-colors"
+                      >
+                        <FiMessageSquare />
+                        Chat
+                      </Link>
+                      <Link
+                        to={`/patient-plan/${patient._id}`}
+                        className="inline-flex items-center gap-2 px-4 py-2 border border-black/10 rounded-lg text-sm font-medium text-black hover:bg-black/5 transition-colors"
+                      >
+                        <FiClipboard className="text-black/60" />
+                        Manage Plan
+                        <FiExternalLink className="text-[10px]" />
+                      </Link>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -187,46 +220,118 @@ export default function PatientsPage() {
           </div>
         </div>
       ) : (
-        /* Patient View: Connect with Doctor */
-        <div className="bg-white p-8 rounded-3xl border border-black/10 shadow-lg text-center max-w-md mx-auto">
-          <div className="w-20 h-20 bg-black text-white rounded-2xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-xl shadow-black/10">
-            <FiKey />
-          </div>
-          <h2 className="text-2xl font-bold mb-2">Connect to Doctor</h2>
-          <p className="text-black/50 mb-8 px-4">
-            Enter the 4-digit connection code provided by your doctor or caregiver.
-          </p>
-
-          <form onSubmit={handleJoinDoctor}>
-            <div className="flex justify-center gap-3 mb-8">
-              {joinOtp.map((digit, i) => (
-                <input
-                  key={i}
-                  id={`otp-${i}`}
-                  type="text"
-                  maxLength="1"
-                  value={digit}
-                  onChange={(e) => handleJoinOTPChange(i, e.target.value)}
-                  className="w-14 h-16 bg-black/5 border-2 border-transparent focus:border-black focus:bg-white text-center text-3xl font-bold rounded-2xl outline-none transition-all"
-                  required
-                />
-              ))}
+        /* Patient View: Connected Doctors List and Connect Form */
+        <div className="grid gap-6">
+          <div className="bg-white rounded-2xl border border-black/10 overflow-hidden shadow-sm">
+            <div className="px-6 py-4 border-b border-black/5 bg-black/[0.01] flex justify-between items-center">
+              <h2 className="font-semibold">Connected Doctors ({doctors.length})</h2>
+              {!showConnectForm && (
+                <button
+                  onClick={() => setShowConnectForm(true)}
+                  className="text-sm font-medium text-black flex items-center gap-1 hover:text-black/70"
+                >
+                  <FiPlus /> Add Doctor
+                </button>
+              )}
             </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 bg-black text-white rounded-2xl font-semibold text-lg hover:bg-black/90 active:scale-95 transition-all shadow-lg shadow-black/20"
-            >
-              {loading ? "Connecting..." : "Connect with Doctor"}
-            </button>
-          </form>
-
-          <div className="mt-8 pt-8 border-t border-black/5">
-            <p className="text-xs text-black/40 leading-relaxed italic">
-              "Connecting with a doctor allows them to remotely manage your medication schedules and help ensure your safety."
-            </p>
+            
+            {loading && doctors.length === 0 ? (
+              <div className="p-12 text-center text-black/40">Loading doctors...</div>
+            ) : doctors.length === 0 && !showConnectForm ? (
+              <div className="p-12 text-center text-black/40 flex flex-col items-center">
+                <p className="mb-4">You are not connected to any doctor.</p>
+                <button
+                  onClick={() => setShowConnectForm(true)}
+                  className="px-6 py-2 bg-black text-white rounded-xl font-medium"
+                >
+                  Connect Now
+                </button>
+              </div>
+            ) : (
+              <div className="divide-y divide-black/5">
+                {doctors.map((doctor) => (
+                  <div key={doctor._id} className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-black/[0.01] transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center text-xl font-bold text-emerald-600 border border-emerald-100">
+                        {doctor.name.charAt(0)}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-black">Dr. {doctor.name}</h3>
+                        <p className="text-sm text-black/50">{doctor.email}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        to={`/chat/${doctor._id}`}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-black/90 transition-colors"
+                      >
+                        <FiMessageSquare />
+                        Chat
+                      </Link>
+                      <button
+                        className="inline-flex items-center gap-2 px-4 py-2 border border-black/10 rounded-lg text-sm font-medium text-black hover:bg-black/5 transition-colors"
+                        onClick={() => alert("Settings for this doctor (e.g., share permissions, alerts) will be available soon.")}
+                      >
+                        <FiSettings className="text-black/60" />
+                        Settings
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
+
+          {showConnectForm && (
+            <div className="bg-white p-8 rounded-3xl border border-black/10 shadow-lg text-center max-w-md mx-auto w-full relative">
+              {doctors.length > 0 && (
+                <button 
+                  onClick={() => setShowConnectForm(false)}
+                  className="absolute top-4 right-4 text-black/40 hover:text-black"
+                >
+                  Close
+                </button>
+              )}
+              <div className="w-20 h-20 bg-black text-white rounded-2xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-xl shadow-black/10">
+                <FiKey />
+              </div>
+              <h2 className="text-2xl font-bold mb-2">Connect to Doctor</h2>
+              <p className="text-black/50 mb-8 px-4">
+                Enter the 4-digit connection code provided by your doctor or caregiver.
+              </p>
+
+              <form onSubmit={handleJoinDoctor}>
+                <div className="flex justify-center gap-3 mb-8">
+                  {joinOtp.map((digit, i) => (
+                    <input
+                      key={i}
+                      id={`otp-${i}`}
+                      type="text"
+                      maxLength="1"
+                      value={digit}
+                      onChange={(e) => handleJoinOTPChange(i, e.target.value)}
+                      className="w-14 h-16 bg-black/5 border-2 border-transparent focus:border-black focus:bg-white text-center text-3xl font-bold rounded-2xl outline-none transition-all"
+                      required
+                    />
+                  ))}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-4 bg-black text-white rounded-2xl font-semibold text-lg hover:bg-black/90 active:scale-95 transition-all shadow-lg shadow-black/20"
+                >
+                  {loading ? "Connecting..." : "Connect with Doctor"}
+                </button>
+              </form>
+
+              <div className="mt-8 pt-8 border-t border-black/5">
+                <p className="text-xs text-black/40 leading-relaxed italic">
+                  "Connecting with a doctor allows them to remotely manage your medication schedules and help ensure your safety."
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
