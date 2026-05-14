@@ -172,3 +172,9 @@ export async function deletePatientMedicine(patientId, medicineId) {
   const response = await api.delete(`/medicines/patient/${patientId}/${medicineId}`);
   return response.data;
 }
+
+// ── SwaasthSaathi AI Chatbot ────────────────────────────────────────────────
+export async function aiChat(message, history = []) {
+  const response = await api.post("/ai/chat", { message, history });
+  return response.data; // { reply: string }
+}

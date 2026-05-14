@@ -24,6 +24,7 @@ import RegisterPage from "./pages/RegisterPage.jsx";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext.jsx";
 import { getSocket } from "./lib/socket.js";
+import SwaasthSaathi from "./components/SwaasthSaathi.jsx";
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -129,6 +130,9 @@ export default function App() {
           onSnooze={handleSnooze}
         />
       )}
+
+      {/* SwaasthSaathi AI chatbot — patients only */}
+      {user && user.role !== "caregiver" && <SwaasthSaathi />}
 
       <Navbar />
       <main className="flex-1 mx-auto max-w-6xl px-4 py-8">
