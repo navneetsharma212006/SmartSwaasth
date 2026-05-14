@@ -15,7 +15,6 @@ export default function DashboardPage() {
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loading, setLoading] = useState(true);
   const [interactions, setInteractions] = useState([]);
   const [showInteractions, setShowInteractions] = useState(false);
 

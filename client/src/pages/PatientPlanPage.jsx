@@ -343,9 +343,8 @@ export default function PatientPlanPage() {
                 />
               </div>
               </div>
-            </div>
-          );
-        })
+            );
+          })
         )}
       </div>
 
