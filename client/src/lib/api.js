@@ -183,3 +183,31 @@ export async function deletePatientMedicine(patientId, medicineId) {
   return response.data;
 }
 
+// NEW: Reports & AI
+export async function uploadPatientReport(patientId, file, title) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("title", title);
+
+  const response = await api.post(`/reports/patient/${patientId}`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+}
+
+export async function getPatientReports(patientId) {
+  const response = await api.get(`/reports/patient/${patientId}`);
+  return response.data;
+}
+
+export async function analyzeReportAI(reportId) {
+  const response = await api.post(`/reports/${reportId}/analyze`);
+  return response.data;
+}
+
+export async function deleteReport(reportId) {
+  const response = await api.delete(`/reports/${reportId}`);
+  return response.data;
+}
+
+

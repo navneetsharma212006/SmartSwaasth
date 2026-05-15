@@ -5,6 +5,8 @@ import StatusBadge from "../components/StatusBadge.jsx";
 import ScheduleManager from "../components/ScheduleManager.jsx";
 import MedicineInteractionModal from "../components/MedicineInteractionModal.jsx";
 import PushNotificationToggle from "../components/PushNotificationToggle.jsx";
+import ReportList from "../components/ReportList.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 import { listMedicines, updateMedicine, checkInteractions } from "../lib/api.js";
 import { formatDate, getExpiryStatus } from "../lib/expiry.js";
 
@@ -12,7 +14,9 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const pickForInteraction = searchParams.get("pickForInteraction") === "1";
+  const { user } = useAuth();
 
+  const [activeTab, setActiveTab] = useState("medicines");
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [interactions, setInteractions] = useState([]);
@@ -116,7 +120,36 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {(expired.length > 0 || expiringSoon.length > 0) && (
+      <div className="flex border-b border-black/10 mt-8 mb-6 gap-6">
+        <button
+          onClick={() => setActiveTab("medicines")}
+          className={`pb-3 font-semibold text-sm transition-colors relative ${
+            activeTab === "medicines" ? "text-black" : "text-black/50 hover:text-black"
+          }`}
+        >
+          My Medications
+          {activeTab === "medicines" && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black rounded-t-full" />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab("reports")}
+          className={`pb-3 font-semibold text-sm transition-colors relative ${
+            activeTab === "reports" ? "text-black" : "text-black/50 hover:text-black"
+          }`}
+        >
+          My Reports
+          {activeTab === "reports" && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black rounded-t-full" />
+          )}
+        </button>
+      </div>
+
+      {activeTab === "reports" ? (
+        <ReportList patientId={user?._id} />
+      ) : (
+        <>
+          {(expired.length > 0 || expiringSoon.length > 0) && (
         <div className="mt-6 flex items-start gap-3 rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-900">
           <FiAlertTriangle className="mt-0.5 text-lg" />
           <div>
@@ -260,6 +293,8 @@ export default function DashboardPage() {
           onClose={() => setShowInteractions(false)}
           medicineIds={items.map(m => m._id)}
         />
+      )}
+        </>
       )}
     </div>
   );

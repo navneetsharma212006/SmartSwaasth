@@ -13,6 +13,7 @@ const authRoutes = require("./routes/authRoutes");
 const adherenceRoutes = require("./routes/adherenceRoutes");
 const pushRoutes = require("./routes/pushRoutes");
 const chatRoutes = require("./routes/chatRoutes");
+const reportRoutes = require("./routes/reportRoutes");
 const { initReminderSchedulers } = require("./services/reminderSchedulers");
 const errorHandler = require("./middleware/errorHandler");
 
@@ -75,6 +76,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api", medicineRoutes);
 app.use("/api", notificationRoutes);
+app.use("/api", reportRoutes);
 app.use("/api/adherence", adherenceRoutes);
 app.use("/api/push", pushRoutes);
 

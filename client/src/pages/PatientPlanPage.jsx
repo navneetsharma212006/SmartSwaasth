@@ -23,6 +23,7 @@ import { formatDate, getExpiryStatus } from "../lib/expiry";
 import ScheduleManager from "../components/ScheduleManager";
 import MedicineInteractionModal from "../components/MedicineInteractionModal";
 import StatusBadge from "../components/StatusBadge";
+import ReportList from "../components/ReportList";
 
 export default function PatientPlanPage() {
   const { patientId } = useParams();
@@ -41,6 +42,7 @@ export default function PatientPlanPage() {
   const [showInteractions, setShowInteractions] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editValues, setEditValues] = useState({ name: "", expiryDate: "", dosageInstructions: "" });
+  const [activeTab, setActiveTab] = useState("medicines");
 
   const load = async () => {
     setLoading(true);
@@ -131,7 +133,36 @@ export default function PatientPlanPage() {
         </div>
       </div>
 
-      {(() => {
+      <div className="flex border-b border-black/10 mb-6 gap-6">
+        <button
+          onClick={() => setActiveTab("medicines")}
+          className={`pb-3 font-semibold text-sm transition-colors relative ${
+            activeTab === "medicines" ? "text-black" : "text-black/50 hover:text-black"
+          }`}
+        >
+          Medications
+          {activeTab === "medicines" && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black rounded-t-full" />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab("reports")}
+          className={`pb-3 font-semibold text-sm transition-colors relative ${
+            activeTab === "reports" ? "text-black" : "text-black/50 hover:text-black"
+          }`}
+        >
+          Medical Reports
+          {activeTab === "reports" && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black rounded-t-full" />
+          )}
+        </button>
+      </div>
+
+      {activeTab === "reports" ? (
+        <ReportList patientId={patientId} />
+      ) : (
+        <>
+          {(() => {
         const expiringSoon = items.filter((m) => getExpiryStatus(m.expiryDate).color === "yellow");
         const expired = items.filter((m) => getExpiryStatus(m.expiryDate).color === "red");
         if (expired.length > 0 || expiringSoon.length > 0) {
@@ -358,6 +389,8 @@ export default function PatientPlanPage() {
           onClose={() => setShowInteractions(false)}
           medicineIds={items.map(m => m._id)}
         />
+      )}
+        </>
       )}
     </div>
   );
