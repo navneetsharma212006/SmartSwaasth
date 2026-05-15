@@ -143,6 +143,11 @@ export async function getUnreadChatCounts() {
   return response.data;
 }
 
+export async function sendSOS() {
+  const response = await api.post("/chat/sos");
+  return response.data;
+}
+
 export async function listPatientMedicines(patientId) {
   const response = await api.get(`/medicines/patient/${patientId}`);
   return response.data;

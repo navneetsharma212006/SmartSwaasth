@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Navbar from "./components/Navbar.jsx";
 import Footer from "./components/Footer.jsx";
 import AlarmModal from "./components/AlarmModal.jsx";
+import SOSManager from "./components/SOSManager.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import UploadPage from "./pages/UploadPage.jsx";
 import ResultPage from "./pages/ResultPage.jsx";
@@ -129,6 +130,8 @@ export default function App() {
           onSnooze={handleSnooze}
         />
       )}
+
+      <SOSManager />
 
       <Navbar />
       <main className="flex-1 mx-auto max-w-6xl px-4 py-8">
