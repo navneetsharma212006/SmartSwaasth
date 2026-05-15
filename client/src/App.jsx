@@ -23,6 +23,7 @@ import ChatPage from "./pages/ChatPage.jsx";
 import DoctorMedicinesPage from "./pages/DoctorMedicinesPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
+import SOSTriggerPage from "./pages/SOSTriggerPage.jsx";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext.jsx";
 import { getSocket } from "./lib/socket.js";
@@ -182,6 +183,7 @@ export default function App() {
           <Route path="/medicines/doctor/:doctorId" element={<ProtectedRoute><DoctorMedicinesPage /></ProtectedRoute>} />
           <Route path="/chat/:userId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+          <Route path="/sos-trigger" element={<ProtectedRoute><SOSTriggerPage /></ProtectedRoute>} />
         </Routes>
       </main>
       <Footer />
