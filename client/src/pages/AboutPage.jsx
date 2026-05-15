@@ -141,6 +141,10 @@ export default function AboutPage() {
           </div>
         </div>
       </div>
+      {/* Version Label */}
+      <div className="mt-8 text-center text-[10px] text-black/20 uppercase tracking-widest font-bold">
+        Build v1.2.4 — Updated Patient Safety & Disconnection Controls
+      </div>
     </div>
   );
 }
