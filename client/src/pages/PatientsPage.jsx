@@ -16,6 +16,9 @@ import {
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import { 
+  generateConnectionOTP,
+  listConnectedPatients,
+  joinDoctor,
   getConnectedDoctors,
   getUnreadChatCounts,
   disconnectPatient,
