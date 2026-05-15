@@ -113,8 +113,71 @@ export default function SOSManager() {
 
     requestPermission();
 
+    // ── Voice SOS Logic ──────────────────────────────────────────────────
+    let recognition;
+    const voiceTriggerKeywords = ["help", "bachao", "emergency", "save me"];
+    let voiceCount = 0;
+    let lastVoiceTime = 0;
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-IN'; // Support Indian English/Hindi context
+
+      recognition.onresult = (event) => {
+        if (isCountingDown) return;
+
+        const result = event.results[event.results.length - 1];
+        const text = result[0].transcript.toLowerCase();
+        const now = Date.now();
+
+        // Check if any keyword is in the transcript
+        const foundKeyword = voiceTriggerKeywords.find(k => text.includes(k));
+
+        if (foundKeyword) {
+          if (now - lastVoiceTime < 5000) { // Within 5 seconds
+            voiceCount += 1;
+          } else {
+            voiceCount = 1;
+          }
+          lastVoiceTime = now;
+
+          console.log(`Voice SOS Trigger detected: "${text}" (Count: ${voiceCount})`);
+
+          if (voiceCount >= 3) {
+            startCountdown();
+            voiceCount = 0;
+          }
+        }
+      };
+
+      recognition.onerror = (event) => {
+        if (event.error !== 'no-speech') {
+          console.error("Speech recognition error:", event.error);
+        }
+      };
+
+      recognition.onend = () => {
+        if (!isCountingDown && user?.role === 'patient') {
+          try {
+            recognition.start(); // Keep listening
+          } catch (e) {}
+        }
+      };
+
+      try {
+        recognition.start();
+      } catch (e) {}
+    }
+
     return () => {
       window.removeEventListener("devicemotion", handleMotion);
+      if (recognition) {
+        recognition.onend = null;
+        recognition.stop();
+      }
       if (countdownInterval.current) clearInterval(countdownInterval.current);
     };
   }, [user, isCountingDown]);
