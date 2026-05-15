@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-const JWT_SECRET = process.env.JWT_SECRET || "smart_swaasth_secret_key_123";
+const JWT_SECRET = process.env.JWT_SECRET || "smart_swaasth_dev_secret_key_123";
 
 exports.register = async (req, res, next) => {
   try {
