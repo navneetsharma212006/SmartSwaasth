@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 
 export default function ReloadPrompt() {
@@ -6,17 +7,27 @@ export default function ReloadPrompt() {
     updateServiceWorker,
   } = useRegisterSW({
     onRegisteredSW(swUrl, r) {
-      // Check for updates every 60 minutes
+      // Poll for updates every 60 seconds (catches Render/Vercel deploys)
       if (r) {
         setInterval(() => {
           r.update();
-        }, 60 * 60 * 1000);
+        }, 60 * 1000);
       }
     },
     onRegisterError(error) {
       console.error("SW registration error:", error);
     },
   });
+
+  // Auto-apply the update after 3 seconds if user doesn't interact
+  useEffect(() => {
+    if (needRefresh) {
+      const timer = setTimeout(() => {
+        updateServiceWorker(true);
+      }, 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [needRefresh]);
 
   if (!needRefresh) return null;
 
@@ -58,7 +69,7 @@ export default function ReloadPrompt() {
         onMouseOver={(e) => (e.target.style.transform = "scale(1.05)")}
         onMouseOut={(e) => (e.target.style.transform = "scale(1)")}
       >
-        Update
+        Update Now
       </button>
       <button
         onClick={() => setNeedRefresh(false)}

@@ -2,6 +2,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
+const BUILD_VERSION = Date.now().toString();
+
 export default defineConfig({
   plugins: [
     react(),
@@ -61,6 +63,10 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // This entry changes on every build, forcing the SW to update
+        additionalManifestEntries: [
+          { url: "/index.html", revision: BUILD_VERSION },
+        ],
         importScripts: ["/sw-push.js"],
         runtimeCaching: [
           {
