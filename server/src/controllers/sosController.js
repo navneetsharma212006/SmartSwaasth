@@ -26,7 +26,7 @@ exports.triggerSOS = async (req, res, next) => {
     // 1. Send Push Notifications
     const pushPayload = {
       title: "🚨 EMERGENCY SOS",
-      body: `${patient.name} has triggered an emergency SOS alert! Please check the chat immediately.`,
+      body: `${patient.name} has triggered an emergency SOS alert! Please check the app immediately.`,
       url: `/chat/${patientId}`,
       tag: "emergency-sos",
       data: {
@@ -36,7 +36,23 @@ exports.triggerSOS = async (req, res, next) => {
     };
     await sendPushToUsers(doctorIds, pushPayload);
 
-    // 2. Automatically post emergency messages in chats
+    // 2. Emit real-time Socket Alert (triggers full-screen alarm on doctor side)
+    const { getIo } = require("../config/socket");
+    const io = getIo();
+    if (io) {
+      doctorIds.forEach(doctorId => {
+        io.to(`user:${doctorId}`).emit("sos:alarm", {
+          patient: {
+            id: patient._id,
+            name: patient.name,
+            email: patient.email
+          },
+          timestamp: new Date()
+        });
+      });
+    }
+
+    // 3. Automatically post emergency messages in chats
     const emergencyMessages = doctorIds.map(doctorId => ({
       senderId: patientId,
       receiverId: doctorId,

@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar.jsx";
 import Footer from "./components/Footer.jsx";
 import AlarmModal from "./components/AlarmModal.jsx";
 import SOSManager from "./components/SOSManager.jsx";
+import SOSAlarmModal from "./components/SOSAlarmModal.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import UploadPage from "./pages/UploadPage.jsx";
 import ResultPage from "./pages/ResultPage.jsx";
@@ -39,6 +40,9 @@ export default function App() {
   // Alarm state: null = no alarm, otherwise { medicine, timeStr }
   const [alarm, setAlarm] = useState(null);
 
+  // SOS state: null = no SOS, otherwise { patient, timestamp }
+  const [sosAlert, setSosAlert] = useState(null);
+
   // Queue of pending alarms (if multiple medicines at the same time)
   const [alarmQueue, setAlarmQueue] = useState([]);
 
@@ -54,6 +58,14 @@ export default function App() {
 
     if (socket.connected) joinRoom();
     socket.on("connect", joinRoom);
+
+    // Listen for SOS Alerts (Doctor side)
+    const handleSosAlert = (data) => {
+      console.log("🚨 SOS ALARM RECEIVED:", data);
+      setSosAlert(data);
+    };
+
+    socket.on("sos:alarm", handleSosAlert);
 
     // Listen for new dosage notifications → trigger alarm
     const handleNotif = (notif) => {
@@ -93,6 +105,7 @@ export default function App() {
 
     return () => {
       socket.off("connect", joinRoom);
+      socket.off("sos:alarm", handleSosAlert);
       socket.off("notification:new", handleNotif);
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.removeEventListener("message", handleSwMessage);
@@ -128,6 +141,13 @@ export default function App() {
           timeStr={alarm.timeStr}
           onDismiss={handleDismiss}
           onSnooze={handleSnooze}
+        />
+      )}
+
+      {sosAlert && (
+        <SOSAlarmModal
+          sosAlert={sosAlert}
+          onDismiss={() => setSosAlert(null)}
         />
       )}
 
