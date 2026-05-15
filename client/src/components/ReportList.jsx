@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { FiFileText, FiUploadCloud, FiTrash2, FiRefreshCw, FiExternalLink, FiCpu, FiAlertTriangle } from "react-icons/fi";
 import { uploadPatientReport, getPatientReports, analyzeReportAI, deleteReport } from "../lib/api";
-import ReactMarkdown from "react-markdown";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -170,8 +169,8 @@ export default function ReportList({ patientId }) {
                   <FiCpu /> AI Analysis Brief
                 </h4>
                 {report.aiSummary ? (
-                  <div className="prose prose-sm max-w-none text-black/80 bg-purple-50/50 p-4 rounded-xl border border-purple-100">
-                    <ReactMarkdown>{report.aiSummary}</ReactMarkdown>
+                  <div className="bg-purple-50/50 p-4 rounded-xl border border-purple-100">
+                    <pre className="whitespace-pre-wrap text-sm text-black/80 font-sans leading-relaxed">{report.aiSummary}</pre>
                   </div>
                 ) : (
                   <div className="bg-black/5 p-4 rounded-xl text-sm text-black/60 flex items-center justify-between border border-black/10">

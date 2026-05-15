@@ -258,6 +258,10 @@ export default function PatientsPage() {
                           </span>
                         )}
                       </Link>
+                      <Link
+                        to={`/patient-plan/${patient._id}`}
+                        className="inline-flex items-center gap-2 px-4 py-2 border border-black/10 rounded-lg text-sm font-medium text-black hover:bg-black/5 transition-colors"
+                      >
                         Dashboard
                         <FiExternalLink className="text-[10px]" />
                       </Link>
@@ -336,9 +340,6 @@ export default function PatientsPage() {
                         <FiActivity className="text-black/60" />
                         My Medicines
                       </Link>
-                        <FiSettings className="text-black/60" />
-                        Settings
-                      </button>
                       <button
                         onClick={() => handleDisconnectDoctor(doctor._id, doctor.name)}
                         className="inline-flex items-center gap-2 px-4 py-2 border border-red-100 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
