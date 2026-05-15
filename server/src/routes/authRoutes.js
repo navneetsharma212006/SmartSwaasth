@@ -15,6 +15,8 @@ router.get("/patients", authMiddleware, user.getPatients);
 router.get("/doctors", authMiddleware, user.getDoctors);
 router.post("/generate-otp", authMiddleware, user.generateOTP);
 router.post("/join-doctor", authMiddleware, user.joinDoctor);
+router.delete("/patients/:patientId", authMiddleware, user.disconnectPatient);
+router.delete("/doctors/:doctorId", authMiddleware, user.disconnectDoctor);
 
 
 module.exports = router;

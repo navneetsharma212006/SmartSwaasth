@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { FiArrowLeft, FiGrid, FiAlertTriangle } from "react-icons/fi";
 import StatusBadge from "../components/StatusBadge.jsx";
-import InteractionAlert from "../components/InteractionAlert.jsx";
+import MedicineInteractionModal from "../components/MedicineInteractionModal.jsx";
 import ScheduleManager from "../components/ScheduleManager.jsx";
 import { formatDate, getExpiryStatus } from "../lib/expiry.js";
 import { checkInteractions, updateMedicine, updatePatientMedicine } from "../lib/api.js";
@@ -18,8 +18,12 @@ export default function ResultPage() {
   useEffect(() => {
     if (state?.medicine) {
       setMedicine(state.medicine);
-      // Check interactions with existing medicines
-      checkInteractions([state.medicine._id]).then(setInteractions);
+      // Fetch all medicines to check interactions with the new one
+      listMedicines().then(all => {
+        const ids = all.map(m => m._id);
+        if (!ids.includes(state.medicine._id)) ids.push(state.medicine._id);
+        checkInteractions(ids).then(setInteractions);
+      });
     }
   }, [state]);
 
@@ -208,9 +212,13 @@ export default function ResultPage() {
       </div>
       
       {showInteractions && (
-        <InteractionAlert
-          interactions={interactions}
+        <MedicineInteractionModal
+          isOpen={showInteractions}
           onClose={() => setShowInteractions(false)}
+          medicineIds={interactions?.medicines?.map(m => m.rxcui ? m.inputName : null).filter(Boolean)} 
+          // medicineIds in the modal actually handles names too if passed correctly, 
+          // but let's just pass the pairs if we have them
+          medicineNames={interactions?.medicines?.map(m => m.inputName)}
         />
       )}
     </div>

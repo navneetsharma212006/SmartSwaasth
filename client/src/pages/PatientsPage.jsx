@@ -11,15 +11,15 @@ import {
   FiAlertCircle,
   FiMessageSquare,
   FiSettings,
-  FiActivity
+  FiActivity,
+  FiUserX
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import { 
-  generateConnectionOTP, 
-  listConnectedPatients, 
-  joinDoctor,
   getConnectedDoctors,
-  getUnreadChatCounts
+  getUnreadChatCounts,
+  disconnectPatient,
+  disconnectDoctor
 } from "../lib/api";
 
 export default function PatientsPage() {
@@ -129,6 +129,41 @@ export default function PatientsPage() {
     }
   };
 
+  const handleDisconnectPatient = async (patientId, patientName) => {
+    if (!window.confirm(`Are you sure you want to disconnect patient ${patientName}? You will no longer be able to manage their medication plans.`)) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await disconnectPatient(patientId);
+      setMessage({ type: "success", text: `Successfully disconnected ${patientName}.` });
+      loadPatients();
+    } catch (err) {
+      setMessage({ type: "error", text: err.response?.data?.error || "Failed to disconnect." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDisconnectDoctor = async (doctorId, doctorName) => {
+    if (!window.confirm(`Are you sure you want to disconnect Dr. ${doctorName}? They will no longer be able to monitor your medicines.`)) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await disconnectDoctor(doctorId);
+      setMessage({ type: "success", text: `Successfully disconnected Dr. ${doctorName}.` });
+      loadDoctors();
+    } catch (err) {
+      setMessage({ type: "error", text: err.response?.data?.error || "Failed to disconnect." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
@@ -223,14 +258,16 @@ export default function PatientsPage() {
                           </span>
                         )}
                       </Link>
-                      <Link
-                        to={`/patient-plan/${patient._id}`}
-                        className="inline-flex items-center gap-2 px-4 py-2 border border-black/10 rounded-lg text-sm font-medium text-black hover:bg-black/5 transition-colors"
-                      >
-                        <FiClipboard className="text-black/60" />
                         Dashboard
                         <FiExternalLink className="text-[10px]" />
                       </Link>
+                      <button
+                        onClick={() => handleDisconnectPatient(patient._id, patient.name)}
+                        className="inline-flex items-center gap-2 px-4 py-2 border border-red-100 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                        title="Disconnect patient"
+                      >
+                        <FiUserX />
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -299,12 +336,15 @@ export default function PatientsPage() {
                         <FiActivity className="text-black/60" />
                         My Medicines
                       </Link>
-                      <button
-                        className="inline-flex items-center gap-2 px-4 py-2 border border-black/10 rounded-lg text-sm font-medium text-black hover:bg-black/5 transition-colors"
-                        onClick={() => alert("Settings for this doctor (e.g., share permissions, alerts) will be available soon.")}
-                      >
                         <FiSettings className="text-black/60" />
                         Settings
+                      </button>
+                      <button
+                        onClick={() => handleDisconnectDoctor(doctor._id, doctor.name)}
+                        className="inline-flex items-center gap-2 px-4 py-2 border border-red-100 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                        title="Disconnect doctor"
+                      >
+                        <FiUserX />
                       </button>
                     </div>
                   </div>

@@ -9,7 +9,8 @@ import {
   FiArrowLeft,
   FiClock,
   FiCalendar,
-  FiActivity
+  FiActivity,
+  FiShield
 } from "react-icons/fi";
 import { 
   listPatientMedicines, 
@@ -20,7 +21,7 @@ import {
 } from "../lib/api";
 import { formatDate, getExpiryStatus } from "../lib/expiry";
 import ScheduleManager from "../components/ScheduleManager";
-import InteractionAlert from "../components/InteractionAlert";
+import MedicineInteractionModal from "../components/MedicineInteractionModal";
 import StatusBadge from "../components/StatusBadge";
 
 export default function PatientPlanPage() {
@@ -46,8 +47,6 @@ export default function PatientPlanPage() {
     try {
       const data = await listPatientMedicines(patientId);
       setItems(data);
-      const interactionResults = await checkInteractions(data.map(m => m._id));
-      setInteractions(interactionResults);
     } catch (err) {
       console.error(err);
     } finally {
@@ -110,15 +109,13 @@ export default function PatientPlanPage() {
           <p className="text-black/60 mt-1">Plan and manage medicines for your patient.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {interactions?.pairs?.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setShowInteractions(true)}
-              className="inline-flex items-center gap-2 rounded-md bg-purple-600 px-4 py-2 text-sm text-white hover:bg-purple-700"
-            >
-              <FiActivity /> {interactions.length} Interaction{interactions.length > 1 ? "s" : ""}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setShowInteractions(true)}
+            className="inline-flex items-center gap-2 rounded-md border border-purple-200 bg-purple-50 px-4 py-2 text-sm font-medium text-purple-900 hover:bg-purple-100"
+          >
+            <FiShield className="text-purple-600" /> Check Interactions
+          </button>
           <button
             onClick={() => navigate(`/scan/${patientId}`)}
             className="inline-flex items-center gap-2 px-4 py-2 border border-black/10 text-black bg-white rounded-lg hover:bg-black/5 transition-all"
@@ -356,9 +353,10 @@ export default function PatientPlanPage() {
       </div>
 
       {showInteractions && (
-        <InteractionAlert
-          interactions={interactions}
+        <MedicineInteractionModal
+          isOpen={showInteractions}
           onClose={() => setShowInteractions(false)}
+          medicineIds={items.map(m => m._id)}
         />
       )}
     </div>

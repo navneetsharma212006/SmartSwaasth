@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { FiTrash2, FiEdit2, FiCheck, FiX, FiAlertTriangle, FiClipboard, FiShield, FiPlusCircle, FiActivity } from "react-icons/fi";
 import StatusBadge from "../components/StatusBadge.jsx";
 import ScheduleManager from "../components/ScheduleManager.jsx";
-import InteractionAlert from "../components/InteractionAlert.jsx";
+import MedicineInteractionModal from "../components/MedicineInteractionModal.jsx";
 import PushNotificationToggle from "../components/PushNotificationToggle.jsx";
 import { listMedicines, updateMedicine, checkInteractions } from "../lib/api.js";
 import { formatDate, getExpiryStatus } from "../lib/expiry.js";
@@ -23,9 +23,6 @@ export default function DashboardPage() {
     try {
       const data = await listMedicines();
       setItems(data);
-      // Check for interactions
-      const interactionResults = await checkInteractions(data.map(m => m._id));
-      setInteractions(interactionResults);
     } finally {
       setLoading(false);
     }
@@ -82,15 +79,13 @@ export default function DashboardPage() {
           >
             <FiPlusCircle /> Medicine interaction
           </Link>
-          {hasInteractions && (
-            <button
-              type="button"
-              onClick={() => setShowInteractions(true)}
-              className="inline-flex items-center gap-2 rounded-md bg-purple-600 px-4 py-2 text-sm text-white hover:bg-purple-700"
-            >
-              <FiShield /> {interactions.length} Interaction{interactions.length > 1 ? "s" : ""}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setShowInteractions(true)}
+            className="inline-flex items-center gap-2 rounded-md border border-purple-200 bg-purple-50 px-4 py-2 text-sm font-medium text-purple-900 hover:bg-purple-100"
+          >
+            <FiShield /> Check Drug Interactions
+          </button>
         </div>
       </div>
 
@@ -260,9 +255,10 @@ export default function DashboardPage() {
       </div>
       
       {showInteractions && (
-        <InteractionAlert
-          interactions={interactions}
+        <MedicineInteractionModal
+          isOpen={showInteractions}
           onClose={() => setShowInteractions(false)}
+          medicineIds={items.map(m => m._id)}
         />
       )}
     </div>

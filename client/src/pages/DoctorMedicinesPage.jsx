@@ -4,7 +4,7 @@ import { FiArrowLeft, FiActivity, FiCalendar, FiClock, FiClipboard } from "react
 import { getDoctorPrescribedMedicines, checkInteractions, updateMedicine } from "../lib/api";
 import { formatDate, getExpiryStatus } from "../lib/expiry";
 import ScheduleManager from "../components/ScheduleManager";
-import InteractionAlert from "../components/InteractionAlert";
+import MedicineInteractionModal from "../components/MedicineInteractionModal";
 import StatusBadge from "../components/StatusBadge";
 
 export default function DoctorMedicinesPage() {
@@ -21,8 +21,7 @@ export default function DoctorMedicinesPage() {
       const data = await getDoctorPrescribedMedicines(doctorId);
       setItems(data);
       if (data.length > 0) {
-        const interactionResults = await checkInteractions(data.map(m => m._id));
-        setInteractions(interactionResults);
+        // We will now use the on-demand modal instead of checking on load
       }
     } catch (err) {
       console.error(err);
@@ -55,15 +54,13 @@ export default function DoctorMedicinesPage() {
           <p className="text-black/60 mt-1">Medicines prescribed by this doctor.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {interactions?.pairs?.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setShowInteractions(true)}
-              className="inline-flex items-center gap-2 rounded-md bg-purple-600 px-4 py-2 text-sm text-white hover:bg-purple-700"
-            >
-              <FiActivity /> {interactions.length} Interaction{interactions.length > 1 ? "s" : ""}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setShowInteractions(true)}
+            className="inline-flex items-center gap-2 rounded-md border border-purple-200 bg-purple-50 px-4 py-2 text-sm font-medium text-purple-900 hover:bg-purple-100"
+          >
+            <FiActivity className="text-purple-600" /> Check Interactions
+          </button>
         </div>
       </div>
 
@@ -173,9 +170,10 @@ export default function DoctorMedicinesPage() {
       </div>
 
       {showInteractions && (
-        <InteractionAlert
-          interactions={interactions}
+        <MedicineInteractionModal
+          isOpen={showInteractions}
           onClose={() => setShowInteractions(false)}
+          medicineIds={items.map(m => m._id)}
         />
       )}
     </div>

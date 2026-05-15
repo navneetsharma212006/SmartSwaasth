@@ -120,3 +120,50 @@ exports.joinDoctor = async (req, res, next) => {
   }
 };
 
+exports.disconnectPatient = async (req, res, next) => {
+  try {
+    if (req.user.role !== "caregiver") {
+      return res.status(403).json({ error: "Only caregivers can disconnect patients" });
+    }
+
+    const { patientId } = req.params;
+
+    // Remove patient from caregiver
+    await User.findByIdAndUpdate(req.user.id, {
+      $pull: { patients: patientId }
+    });
+
+    // Remove caregiver from patient
+    await User.findByIdAndUpdate(patientId, {
+      $pull: { caregivers: req.user.id }
+    });
+
+    res.json({ message: "Patient disconnected successfully" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.disconnectDoctor = async (req, res, next) => {
+  try {
+    if (req.user.role !== "patient") {
+      return res.status(403).json({ error: "Only patients can disconnect doctors" });
+    }
+
+    const { doctorId } = req.params;
+
+    // Remove doctor from patient
+    await User.findByIdAndUpdate(req.user.id, {
+      $pull: { caregivers: doctorId }
+    });
+
+    // Remove patient from doctor
+    await User.findByIdAndUpdate(doctorId, {
+      $pull: { patients: req.user.id }
+    });
+
+    res.json({ message: "Doctor disconnected successfully" });
+  } catch (err) {
+    next(err);
+  }
+};

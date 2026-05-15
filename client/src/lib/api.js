@@ -123,6 +123,16 @@ export async function getConnectedDoctors() {
   return response.data;
 }
 
+export async function disconnectPatient(patientId) {
+  const response = await api.delete(`/auth/patients/${patientId}`);
+  return response.data;
+}
+
+export async function disconnectDoctor(doctorId) {
+  const response = await api.delete(`/auth/doctors/${doctorId}`);
+  return response.data;
+}
+
 export async function getChatHistory(userId) {
   const response = await api.get(`/chat/${userId}`);
   return response.data;
