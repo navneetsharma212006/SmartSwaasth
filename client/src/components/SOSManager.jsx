@@ -46,24 +46,25 @@ export default function SOSManager() {
     shakeCount.current = 0;
   };
 
-  useEffect(() => {
-    if (status === "counting" && countdown === 0) {
-      if (countdownInterval.current) clearInterval(countdownInterval.current);
-      triggerSOS();
-    }
-  }, [countdown, status, triggerSOS]);
-
   const startCountdown = () => {
     setIsCountingDown(true);
     setStatus("counting");
     setCountdown(5);
-    
+    shakeCount.current = 0; // Reset shake count
     if (navigator.vibrate) navigator.vibrate([500, 200, 500]);
-
-    countdownInterval.current = setInterval(() => {
-      setCountdown((prev) => prev - 1);
-    }, 1000);
   };
+
+  useEffect(() => {
+    let timer;
+    if (status === "counting" && countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    } else if (status === "counting" && countdown === 0) {
+      triggerSOS();
+    }
+    return () => clearInterval(timer);
+  }, [status, countdown, triggerSOS]);
 
   useEffect(() => {
     if (!user || user.role !== "patient") return;
