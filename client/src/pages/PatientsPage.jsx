@@ -92,7 +92,8 @@ export default function PatientsPage() {
       setGeneratedOtp(data.otp);
       setMessage({ type: "success", text: "Code generated! Valid for 10 minutes." });
     } catch (err) {
-      setMessage({ type: "error", text: "Failed to generate code." });
+      const errorMsg = err.response?.data?.error || "Failed to generate code. Please try logging out and in again.";
+      setMessage({ type: "error", text: errorMsg });
     } finally {
       setLoading(false);
     }
